@@ -1,0 +1,67 @@
+torch==1.13.1
+torchvision==0.14.1
+packaging
+sentencepiece
+peft==0.4.0
+einops==0.4.1
+fastapi==0.100.1
+gradio==3.39.0
+markdown2==2.4.10
+numpy==1.24.2
+openai==0.27.8
+opencv_python==4.8.0.74
+Pillow==9.4.0
+pycocotools==2.0.6
+Requests==2.31.0
+shortuuid==1.0.11
+tqdm==4.64.1
+transformers==4.31.0
+uvicorn==0.23.2
+bitsandbytes==0.41.1
+scipy==1.11.2
+
+
+
+pip install --no-index torch==1.13.1
+pip install --no-index torchvision==0.14.1
+pip install --no-index packaging
+pip install --no-index sentencepiece
+pip install --no-index peft
+pip install --no-index einops
+pip install --no-index fastapi
+pip install --no-index gradio
+pip install --no-index markdown2
+pip install --no-index numpy==1.24.2
+pip install --no-index openai
+pip install --no-index opencv_python
+pip install --no-index Pillow==9.4.0
+pip install --no-index pycocotools==2.0.6
+pip install --no-index Requests==2.31.0
+pip install --no-index shortuuid
+pip install --no-index tqdm==4.64.1
+pip install --no-index transformers==4.31.0
+pip install --no-index uvicorn==0.23.2
+pip install --no-index bitsandbytes==0.41.1
+pip install --no-index scipy
+pip install --no-index deepspeed
+pip install --no-index tensorboard
+pip install --no-index scikit-image
+
+
+
+deepspeed --master_port=24999 train_ds5_freeze-dahi-FFFT2.py \
+  --version=./mbin/test/LLaVA-7B-Lightening-v1-1/ \
+  --constrative \
+  --constrative_dataset_dir=$SLURM_TMPDIR/cd-datasets/ \
+  --dataset_dir=$SLURM_TMPDIR/cd-datasets/ \
+  --vision_pretrained=./mbin/sam_vit_h_4b8939.pth \
+  --vision-tower './mbin/clip-vit-large-patch14' \
+  --sample_rates='1' \
+  --epochs='200' \
+  --dataset='contrastive_cd_dataset' \
+  --exp_name="debug" \
+  --batch_size 4 \
+  --steps_per_epoch 1541 \
+  --const_seg_data xbd \
+
+

@@ -1,0 +1,74 @@
+CUDA_VISIBLE_DEVICES=0 python chat.py --version='./mbin/xinlai/LISA-13B-llama2-v1' --precision='fp16' --load_in_4bit
+
+
+#python chat.py --version='./mbin/xinlai/LISA-13B-llama2-v1' --precision='fp16' --load_in_4bit
+#salloc --time=6-23:59:59 --ntasks=1 --gpus-per-node=v100l:4 --nodes=1 --account=def-amahdavi
+
+salloc --time=2:59:59 --ntasks=1 --gpus-per-node=v100l:4 --nodes=1 --account=def-amahdavi
+
+https://docs.alliancecan.ca/wiki/Running_jobs
+
+
+
+
+
+tar -xzvf ./dataset.tar.gz -C $SLURM_TMPDIR/
+
+cp $SLURM_TMPDIR/dataset/vlpart/paco/annotations/paco_ego4d_v1/* $SLURM_TMPDIR/dataset/vlpart/paco/annotations/
+cp $SLURM_TMPDIR/dataset/vlpart/paco/annotations/paco_lvis_v1/* $SLURM_TMPDIR/dataset/vlpart/paco/annotations/
+
+module load cuda/11.0
+module use cuda/11.0
+
+deepspeed --master_port=24999 train_ds.py \
+  --version=./mbin/llava-out/ \
+  --dataset_dir=$SLURM_TMPDIR/dataset/ \
+  --vision_pretrained=./mbin/sam_vit_h_4b8939.pth \
+  --dataset="sem_seg||refer_seg||vqa||reason_seg" \
+  --sample_rates="9,3,3,1" \
+  --exp_name="lisa-7b-mine"
+
+
+
+
+deepspeed --master_port=24999 train_ds.py --version=./mbin/test/LLaVA-7B-Lightening-v1-1/ --constrative_dataset_dir=$SLURM_TMPDIR/cd-datasets/ --vision_pretrained=./mbin/sam_vit_h_4b8939.pth --exp_name="del_lisa-7b-cd-dataset-14days" --vision-tower='./mbin/clip-vit-large-patch14' --epochs='20' --sample_rates='1' --constrative
+
+tensorboard --logdir ./ --host ng11101.narval.calcul.quebec
+
+
+
+deepspeed --master_port=24999 train_ds3.py   --version=./mbin/test/LLaVA-7B-Lightening-v1-1/   --constrative   --constrative_dataset_dir=$SLURM_TMPDIR/cd-datasets/   --dataset_dir=$SLURM_TMPDIR/cd-datasets/   --vision_pretrained=./mbin/sam_vit_h_4b8939.pth   --vision-tower './mbin/clip-vit-large-patch14'   --sample_rates='1'   --epochs='100'   --dataset='contrastive_cd_dataset'   --exp_name="out_debug"   --batch_size 4   --steps_per_epoch 1541   --const_seg_data xbd
+
+
+
+
+
+deepspeed --master_port=24999 train_ds.py --version=./mbin/test/LLaVA-7B-Lightening-v1-1/ --constrative_dataset_dir=$SLURM_TMPDIR/cd-datasets/ --dataset_dir=$SLURM_TMPDIR/cd-datasets/ --vision_pretrained=./mbin/sam_vit_h_4b8939.pth --exp_name="del_lisa-7b-cd-dataset-14days" --vision-tower './mbin/clip-vit-large-patch14' --epochs='20'  --sample_rates='1' --dataset='contrastive_cd_dataset' --constrative --steps_per_epoch 2
+
+
+
+
+
+
+
+deepspeed --master_port=24999 train_ds.py \
+  --version=./mbin/test/LLaVA-7B-Lightening-v1-1/ \
+  --constrative \
+  --constrative_dataset_dir=$SLURM_TMPDIR/cd-datasets/ \
+  --dataset_dir=$SLURM_TMPDIR/cd-datasets/ \
+  --vision_pretrained=./mbin/sam_vit_h_4b8939.pth \
+  --vision-tower './mbin/clip-vit-large-patch14' \
+  --sample_rates='1' \
+  --epochs='20' \
+  --dataset='contrastive_cd_dataset' \
+  --exp_name="dddd" \
+  --batch_size 4 \
+  --grad_accumulation_steps 1 \
+  --steps_per_epoch 1541 \
+
+
+python xbd_inf_gen_contrastive.py --version="./runs/lisa-7b-cd-const-7days_new/LISA-7B/" --vision-tower './mbin/clip-vit-large-patch14'
+
+deepspeed --master_port=24999 train_ds.py   --version=./mbin/test/LLaVA-7B-Lightening-v1-1/   --constrative   --constrative_dataset_dir=$SLURM_TMPDIR/cd-datasets/   --dataset_dir=$SLURM_TMPDIR/cd-datasets/   --vision_pretrained=./mbin/sam_vit_h_4b8939.pth   --vision-tower './mbin/clip-vit-large-patch14'   --sample_rates='1'   --epochs='20'   --dataset='contrastive_cd_dataset'   --exp_name="lisa-7b-cd-const-7days_new_xbdonly_grad10"   --batch_size 4   --steps_per_epoch 500 --eval_only
+
+
