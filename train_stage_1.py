@@ -760,7 +760,9 @@ def validate(val_loader, model_engine, epoch, writer, args):
 
             cv2.putText(sv_image, prmpt, (10,20), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 1)
 
-            cv2.imwrite(os.path.join(save_dir, str(local_ctr)+"_" +save_name), sv_image)
+            temp_name_i = str(local_ctr) + "_" + save_name
+            wandb.Image(sv_image, caption=f"{temp_name_i}")
+            # cv2.imwrite(os.path.join(save_dir, str(local_ctr)+"_" +save_name), sv_image)
 
             local_ctr += 1
 
