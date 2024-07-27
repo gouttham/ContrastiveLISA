@@ -119,6 +119,8 @@ def parse_args(args):
 
 
 def main(args):
+    args = parse_args(args)
+
     wandb.init(
         # set the wandb project where this run will be logged
         project=args.exp_name,
@@ -132,7 +134,7 @@ def main(args):
         }
     )
 
-    args = parse_args(args)
+
     args.log_dir = os.path.join(args.log_base_dir, args.exp_name)
     if args.local_rank == 0:
         os.makedirs(args.log_dir, exist_ok=True)
