@@ -1,3 +1,5 @@
 *.git
 mbin/
 .idea
+cd-datasets
+requirements_cpu.txt

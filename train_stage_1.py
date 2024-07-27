@@ -22,6 +22,8 @@ from utils.utils import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
 from utils.cd_dataset import Contrastive_CD_Dataset
 import cv2
 import pdb
+import wandb
+import random
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description="LISA Model Training")
@@ -101,6 +103,7 @@ def parse_args(args):
     parser.add_argument("--train_mask_decoder", action="store_true", default=True)
     parser.add_argument("--use_mm_start_end", action="store_true", default=True)
     parser.add_argument("--auto_resume", action="store_true", default=True)
+    parser.add_argument("--wandb_ctr", default=0, type=int)
     parser.add_argument(
         "--conv_type",
         default="llava_v1",
@@ -116,6 +119,19 @@ def parse_args(args):
 
 
 def main(args):
+    wandb.init(
+        # set the wandb project where this run will be logged
+        project=args.exp_name,
+
+        # track hyperparameters and run metadata
+        config={
+            "batch_size": args.batch_size,
+            "steps_per_epoch": args.steps_per_epoch,
+            "dataset": args.const_seg_data,
+            "grad_accumulation_steps": args.grad_accumulation_steps,
+        }
+    )
+
     args = parse_args(args)
     args.log_dir = os.path.join(args.log_base_dir, args.exp_name)
     if args.local_rank == 0:
@@ -544,6 +560,7 @@ def main(args):
                     shutil.rmtree(save_dir)
             torch.distributed.barrier()
             model_engine.save_checkpoint(save_dir)
+    wandb.finish()
 
 
 def train(
@@ -620,6 +637,7 @@ def train(
         batch_time.update(time.time() - end)
         end = time.time()
 
+        cur_ctr = args.wandb_ctr
         if global_step % args.print_freq == 0:
             if args.distributed:
                 batch_time.all_reduce()
@@ -632,22 +650,26 @@ def train(
                 mask_losses.all_reduce()
 
             if args.local_rank == 0:
+
                 progress.display(global_step + 1)
-                writer.add_scalar("train/loss", losses.avg, global_step)
-                writer.add_scalar("train/ce_loss", ce_losses.avg, global_step)
-                writer.add_scalar(
-                    "train/mask_bce_loss", mask_bce_losses.avg, global_step
-                )
-                writer.add_scalar(
-                    "train/mask_dice_loss", mask_dice_losses.avg, global_step
-                )
-                writer.add_scalar("train/mask_loss", mask_losses.avg, global_step)
-                writer.add_scalar(
-                    "metrics/total_secs_per_batch", batch_time.avg, global_step
-                )
-                writer.add_scalar(
-                    "metrics/data_secs_per_batch", data_time.avg, global_step
-                )
+
+                wandb.log({
+                    "train/loss": losses.avg,
+                    "train/ce_loss": ce_losses.avg,
+                    "train/mask_bce_loss":mask_bce_losses.avg,
+                    "train/mask_dice_loss":mask_dice_losses.avg,
+                    "train/mask_loss":mask_losses.avg,
+                    "metrics/total_secs_per_batch":batch_time.avg,
+                    "metrics/data_secs_per_batch":data_time.avg,
+                })
+
+                # writer.add_scalar("train/loss", losses.avg, cur_ctr)
+                # writer.add_scalar("train/ce_loss", ce_losses.avg, cur_ctr)
+                # writer.add_scalar("train/mask_bce_loss", mask_bce_losses.avg, cur_ctr)
+                # writer.add_scalar("train/mask_dice_loss", mask_dice_losses.avg, cur_ctr)
+                # writer.add_scalar("train/mask_loss", mask_losses.avg, cur_ctr)
+                # writer.add_scalar("metrics/total_secs_per_batch", batch_time.avg, cur_ctr)
+                # writer.add_scalar("metrics/data_secs_per_batch", data_time.avg, cur_ctr)
 
             batch_time.reset()
             data_time.reset()
@@ -656,11 +678,13 @@ def train(
             mask_bce_losses.reset()
             mask_dice_losses.reset()
             mask_losses.reset()
+        args.wandb_ctr += 1
         try:
             if global_step != 0:
                 curr_lr = scheduler.get_last_lr()
                 if args.local_rank == 0:
-                    writer.add_scalar("train/lr", curr_lr[0], global_step)
+                    wandb.log({"train/lr":curr_lr[0]})
+                    # writer.add_scalar("train/lr", curr_lr[0], cur_ctr)
         except:
             print('ISSUE')
 
@@ -760,8 +784,9 @@ def validate(val_loader, model_engine, epoch, writer, args):
     giou = acc_iou_meter.avg[1]
 
     if args.local_rank == 0:
-        writer.add_scalar("val/giou", giou, epoch)
-        writer.add_scalar("val/ciou", ciou, epoch)
+        wandb.log({"val/giou": giou, "val/ciou": ciou })
+        # writer.add_scalar("val/giou", giou, epoch)
+        # writer.add_scalar("val/ciou", ciou, epoch)
         print("giou: {:.4f}, ciou: {:.4f}".format(giou, ciou))
 
     return giou, ciou
