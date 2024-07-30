@@ -429,7 +429,7 @@ def main(args):
     # pdb.set_trace()
     print("****** Loading stage1 Pretrained weights ******")
     model.load_state_dict(torch.load("./runs/lisa-7b-xbd-14days/ckpt_model/pytorch_model.bin"),strict=False)
-    model.load_state_dict(torch.load("./runs/stage1_s2looking/pytorch_model.bin",strict=True))
+    model.load_state_dict(torch.load("./runs/stage1_s2looking/pytorch_model.bin"),strict=True)
 
     model_engine, optimizer, _, scheduler = deepspeed.initialize(
         model=model,
