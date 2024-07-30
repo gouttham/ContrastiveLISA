@@ -445,7 +445,7 @@ def main(args):
     )
 
     print("Resume Stage 1 weights and optimizer states")
-    model_engine.load_checkpoint('./runs/stage1_s2looking/ckpt_model/')
+    model_engine.load_checkpoint('./runs/stage1_s2looking/ckpt_model/',load_optimizer_states=False, load_lr_scheduler_states = False)
 
     # resume deepspeed checkpoint
     # if args.auto_resume and len(args.resume) == 0:
