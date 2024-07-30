@@ -445,7 +445,15 @@ def main(args):
     )
 
     print("Resume Stage 1 weights and optimizer states")
-    model_engine.load_checkpoint('./runs/stage1_s2looking/ckpt_model/',load_optimizer_states=False, load_lr_scheduler_states = True)
+    # model_engine.load_checkpoint('./runs/stage1_s2looking/ckpt_model/',load_optimizer_states=False, load_lr_scheduler_states = True)
+    args.resume = './runs/stage1_s2looking/ckpt_model/'
+    model_engine.load_checkpoint(args.resume)
+    with open(os.path.join(args.resume, "latest"), "r") as f:
+        ckpt_dir = f.readlines()[0].strip()
+    args.start_epoch = (int(ckpt_dir.replace("global_step", "")) // args.steps_per_epoch)
+    print("resume training from {}, start from epoch {}".format(args.resume, args.start_epoch))
+
+
 
     # resume deepspeed checkpoint
     # if args.auto_resume and len(args.resume) == 0:
