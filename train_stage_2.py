@@ -382,7 +382,7 @@ def main(args):
                 "total_num_steps": args.epochs * args.steps_per_epoch,
                 "warmup_min_lr": 0,
                 "warmup_max_lr": args.lr,
-                "warmup_num_steps": 0,
+                "warmup_num_steps": 100,
                 "warmup_type": "linear",
             },
         },
@@ -428,8 +428,7 @@ def main(args):
         
     # pdb.set_trace()
     print("****** Loading stage1 Pretrained weights ******")
-    # model.load_state_dict(torch.load('./runs/lisa-7b-xbd-14days/ckpt_model/pytorch_model.bin'),strict=False)
-    model.load_state_dict(torch.load('./runs/stage1_s2looking/pytorch_model.bin'), strict=False)
+    model.load_state_dict(torch.load('./runs/lisa-7b-xbd-14days/ckpt_model/pytorch_model.bin'),strict=False)
 
     model_engine, optimizer, _, scheduler = deepspeed.initialize(
         model=model,
@@ -445,44 +444,47 @@ def main(args):
         config=ds_config,
     )
 
+    print("Resume Stage 1 weights and optimizer states")
+    model_engine.load_checkpoint('./runs/stage1_s2looking/ckpt_model/')
+
     # resume deepspeed checkpoint
-    if args.auto_resume and len(args.resume) == 0:
-        resume = os.path.join(args.log_dir, "ckpt_model")
-        print('-------------------1')
-        print(resume)
-        print('-------------------')
-        if os.path.exists(resume):
-            args.resume = resume
-    print('-------------------2')
-    print(args.resume)
-    print('-------------------')
+    # if args.auto_resume and len(args.resume) == 0:
+    #     resume = os.path.join(args.log_dir, "ckpt_model")
+    #     print('-------------------1')
+    #     print(resume)
+    #     print('-------------------')
+    #     if os.path.exists(resume):
+    #         args.resume = resume
+    # print('-------------------2')
+    # print(args.resume)
+    # print('-------------------')
 
     # print(model_engine._get_zero_frozen_param_attributes(model_engine._get_param_shape_func))
     
     
     # pdb.set_trace()
-    if args.resume:
-        print("****** Resuming Training from ******")
-        print("****** UN Freezing intake pipeline ******")
-        
-            
-        print(args.resume)
-        load_path, client_state = model_engine.load_checkpoint(args.resume)
-        with open(os.path.join(args.resume, "latest"), "r") as f:
-            ckpt_dir = f.readlines()[0].strip()
-        args.start_epoch = (
-            int(ckpt_dir.replace("global_step", "")) // args.steps_per_epoch
-        )
-        print(
-            "resume training from {}, start from epoch {}".format(
-                args.resume, args.start_epoch
-            )
-        )
+    # if args.resume:
+    #     print("****** Resuming Training from ******")
+    #     print("****** UN Freezing intake pipeline ******")
+    #
+    #
+    #     print(args.resume)
+    #     load_path, client_state = model_engine.load_checkpoint(args.resume)
+    #     with open(os.path.join(args.resume, "latest"), "r") as f:
+    #         ckpt_dir = f.readlines()[0].strip()
+    #     args.start_epoch = (
+    #         int(ckpt_dir.replace("global_step", "")) // args.steps_per_epoch
+    #     )
+    #     print(
+    #         "resume training from {}, start from epoch {}".format(
+    #             args.resume, args.start_epoch
+    #         )
+    #     )
 
-        print("****** Freezing intake pipeline ******")
-        model.cross_attn.train()
-        for param in model.cross_attn.parameters():
-            param.requires_grad = False
+        # print("****** Freezing intake pipeline ******")
+        # model.cross_attn.train()
+        # for param in model.cross_attn.parameters():
+        #     param.requires_grad = False
     # else:
 
     #     print("****** UN Freezing intake pipeline ******")
