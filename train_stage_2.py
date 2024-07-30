@@ -428,7 +428,8 @@ def main(args):
         
     # pdb.set_trace()
     print("****** Loading stage1 Pretrained weights ******")
-    model.load_state_dict(torch.load('./runs/lisa-7b-xbd-14days/ckpt_model/pytorch_model.bin'),strict=False)
+    model.load_state_dict(torch.load("./runs/lisa-7b-xbd-14days/ckpt_model/pytorch_model.bin"),strict=False)
+    model.load_state_dict(torch.load("./runs/stage1_s2looking/pytorch_model.bin",strict=True))
 
     model_engine, optimizer, _, scheduler = deepspeed.initialize(
         model=model,
@@ -443,17 +444,6 @@ def main(args):
         ),
         config=ds_config,
     )
-
-    print("Resume Stage 1 weights and optimizer states")
-    # model_engine.load_checkpoint('./runs/stage1_s2looking/ckpt_model/',load_optimizer_states=False, load_lr_scheduler_states = True)
-    args.resume = './runs/stage1_s2looking/ckpt_model/'
-    model_engine.load_checkpoint(args.resume)
-    with open(os.path.join(args.resume, "latest"), "r") as f:
-        ckpt_dir = f.readlines()[0].strip()
-    args.start_epoch = (int(ckpt_dir.replace("global_step", "")) // args.steps_per_epoch)
-    print("resume training from {}, start from epoch {}".format(args.resume, args.start_epoch))
-
-
 
     # resume deepspeed checkpoint
     # if args.auto_resume and len(args.resume) == 0:
