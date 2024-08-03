@@ -10,4 +10,4 @@ deepspeed --master_port=24999 train_stage_v2.py \
   --exp_name="stagev2_xbd" \
   --batch_size 4 \
   --steps_per_epoch 1541 \
-  --const_seg_data s2looking
+  --const_seg_data "xbd"
