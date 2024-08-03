@@ -1,4 +1,4 @@
-deepspeed --master_port=24999 train_stage_2.py \
+deepspeed --master_port=24999 train_stage_v2.py \
   --version=./mbin/test/LLaVA-7B-Lightening-v1-1/ \
   --constrative --constrative_dataset_dir=/localscratch/gna23/cd-datasets/ \
   --dataset_dir=/localscratch/gna23/cd-datasets/ \
@@ -7,7 +7,7 @@ deepspeed --master_port=24999 train_stage_2.py \
   --sample_rates='1' \
   --epochs='200' \
   --dataset='contrastive_cd_dataset' \
-  --exp_name="stage2_s2looking" \
+  --exp_name="stagev2_xbd" \
   --batch_size 4 \
   --steps_per_epoch 1541 \
   --const_seg_data s2looking
