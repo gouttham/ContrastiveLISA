@@ -1,4 +1,4 @@
-python train.py \
+deepspeed --master_port=24999 train_stage_v2.py \
   --version=./mbin/test/LLaVA-7B-Lightening-v1-1/ \
   --constrative --constrative_dataset_dir=/localscratch/gna23/cd-datasets/ \
   --dataset_dir=/localscratch/gna23/cd-datasets/ \
@@ -10,4 +10,4 @@ python train.py \
   --exp_name="debug" \
   --batch_size 4 \
   --steps_per_epoch 1541 \
-  --const_seg_data "xbd||s2looking"
+  --const_seg_data "xbd"
