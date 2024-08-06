@@ -1,4 +1,4 @@
-python train_stage_v2.py \
+python train.py \
   --version=./mbin/test/LLaVA-7B-Lightening-v1-1/ \
   --constrative --constrative_dataset_dir=/localscratch/gna23/cd-datasets/ \
   --dataset_dir=/localscratch/gna23/cd-datasets/ \
