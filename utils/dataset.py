@@ -102,9 +102,9 @@ def collate_fn3(
         for i, rou in enumerate(rounds):
             if rou == "":
                 break
-            print(conv.sep2)
-            print(sep)
-            print(rou)
+            print("conv.sep2 : ",conv.sep2)
+            print("sep : ",sep)
+            print("rou : ",rou)
             0/0
             parts = rou.split(sep)
             # if len(parts) != 2:
