@@ -25,7 +25,7 @@ from .sem_seg_dataset import SemSegDataset
 from .utils import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
                     DEFAULT_IMAGE_TOKEN)
 from .vqa_dataset import VQADataset
-import pdb
+
 
 def collate_fn3(
     batch, tokenizer=None, conv_type="llava_v1", use_mm_start_end=True, local_rank=-1
@@ -102,7 +102,10 @@ def collate_fn3(
         for i, rou in enumerate(rounds):
             if rou == "":
                 break
-            pdb.set_trace()
+            print(conv.sep2)
+            print(sep)
+            print(rou)
+            0/0
             parts = rou.split(sep)
             # if len(parts) != 2:
             #     break
