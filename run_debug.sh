@@ -10,5 +10,4 @@ deepspeed --master_port=24999 train_stage_v2.py \
   --exp_name="debug" \
   --batch_size 4 \
   --steps_per_epoch 1541 \
-  --const_seg_data "xbd" \
-  --workers 0
+  --const_seg_data "xbd"
