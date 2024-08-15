@@ -688,14 +688,18 @@ class Contrastive_CD_Dataset(torch.utils.data.Dataset):
         if len(unique_label) == 0:
             return self.__getitem__(0)
 
-        if ds == 'xbd':
-            if 4 in unique_label:
-                unique_label.remove(4)
-                if len(unique_label) >= self.num_classes_per_sample:
-                    if 0 in unique_label:
-                        unique_label.remove(0)
+        # if ds == 'xbd':
+        #     if 4 in unique_label:
+        #         unique_label.remove(4)
+        #         if len(unique_label) >= self.num_classes_per_sample:
+        #             if 0 in unique_label:
+        #                 unique_label.remove(0)
             # unique_label = [0,1,2,3]
-            
+
+        if ds == 'xbd':
+            if 0 in unique_label:
+                unique_label.remove(0)
+
         classes = [self.data2classes[ds][class_id] for class_id in unique_label]
         if len(classes) >= self.num_classes_per_sample:
             sampled_classes = np.random.choice(

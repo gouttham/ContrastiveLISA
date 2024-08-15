@@ -1,4 +1,4 @@
 [
-    "undamaged region", "region with minor damage",
-    "region with major damage", "completely destroyed region"
+    "no building","undamaged building", "building with minor damage",
+    "building with major damage", "completely destroyed building"
 ]
