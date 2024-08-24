@@ -298,7 +298,7 @@ def main(args):
             precision=args.precision,
             image_size=args.image_size,
             num_classes_per_sample=args.num_classes_per_sample,
-            exclude_val=True,
+            exclude_val=False,
             dataset=args.dataset,
             sample_rate=[1],
             sem_seg_data=args.sem_seg_data,
