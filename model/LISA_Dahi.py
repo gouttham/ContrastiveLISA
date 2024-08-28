@@ -199,15 +199,15 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         inference: bool = False,
         **kwargs,
     ):
-        print("Debuging LISA")
-        print("images : ",images.shape)
-        print("images_clip : ",images_clip.shape)
-        print("input_ids : ",input_ids.shape)
-        print("labels : ",labels.shape)
-        print("attention_masks : ", attention_masks.shape)
-        print("masks_list : ", masks_list[0].shape)
-        print("masks_list : ", len(masks_list))
-        pdb.set_trace()
+        # print("Debuging LISA")
+        # print("images : ",images.shape)
+        # print("images_clip : ",images_clip.shape)
+        # print("input_ids : ",input_ids.shape)
+        # print("labels : ",labels.shape)
+        # print("attention_masks : ", attention_masks.shape)
+        # print("masks_list : ", masks_list[0].shape)
+        # print("masks_list : ", len(masks_list))
+        # pdb.set_trace()
 
         if self.constrative:
             
