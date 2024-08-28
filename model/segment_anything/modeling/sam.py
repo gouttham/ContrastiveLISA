@@ -166,6 +166,8 @@ class Sam(nn.Module):
         )
         # masks = masks.to(dtype)
         masks = masks[..., : input_size[0], : input_size[1]]
+        print("sam mask : ",masks.shape)
+        print("original_size : ", original_size)
         masks = F.interpolate(
             masks, original_size, mode="bilinear", align_corners=False
         )
