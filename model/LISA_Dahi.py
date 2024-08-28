@@ -199,6 +199,8 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         inference: bool = False,
         **kwargs,
     ):
+        print("Debuging LISA")
+        pdb.set_trace()
 
         if self.constrative:
             
