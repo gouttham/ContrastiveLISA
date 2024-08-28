@@ -200,6 +200,10 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         **kwargs,
     ):
         print("Debuging LISA")
+        print("images : ",images.shape)
+        print("images_clip : ",images_clip.shape)
+        print("input_ids : ",input_ids.shape)
+        print("labels : ",labels.shape)
         pdb.set_trace()
 
         if self.constrative:
