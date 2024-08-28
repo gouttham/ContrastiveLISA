@@ -199,8 +199,8 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         inference: bool = False,
         **kwargs,
     ):
-        for ech_lbl in label_list:
-            print("ech_lbl : ",ech_lbl.shape)
+        # for ech_lbl in label_list:
+            # print("ech_lbl : ",ech_lbl.shape)
         # print("Debuging LISA")
         # print("images : ",images.shape)
         # print("images_clip : ",images_clip.shape)
