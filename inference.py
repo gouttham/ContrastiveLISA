@@ -268,29 +268,8 @@ def main(args):
     world_size = torch.cuda.device_count()
     args.distributed = world_size > 1
 
-    if not args.constrative:
-        train_dataset = HybridDataset(
-            args.dataset_dir,
-            tokenizer,
-            args.vision_tower,
-            samples_per_epoch=args.batch_size
-            * args.grad_accumulation_steps
-            * args.steps_per_epoch
-            * world_size,
-            precision=args.precision,
-            image_size=args.image_size,
-            num_classes_per_sample=args.num_classes_per_sample,
-            exclude_val=True,
-            dataset=args.dataset,
-            sample_rate=[float(x) for x in args.sample_rates.split(",")],
-            sem_seg_data=args.sem_seg_data,
-            refer_seg_data=args.refer_seg_data,
-            vqa_data=args.vqa_data,
-            reason_seg_data=args.reason_seg_data,
-            explanatory=args.explanatory,
-        )
-    else:
-        train_dataset = HybridDataset(
+
+    val_dataset = HybridDataset(
             args.constrative_dataset_dir,
             tokenizer,
             args.vision_tower,
@@ -306,45 +285,12 @@ def main(args):
             vqa_data=args.vqa_data,
             reason_seg_data=args.reason_seg_data,
             explanatory=args.explanatory,
-            const_seg_data = args.const_seg_data
+            const_seg_data = args.const_seg_data)
+
+    print(
+            f"validating with {len(val_dataset)} examples."
         )
-        args.steps_per_epoch = round(train_dataset.__len__()/(args.batch_size*world_size))
 
-
-    if args.no_eval == False:
-        if not args.constrative:
-            val_dataset = ValDataset(
-                args.dataset_dir,
-                tokenizer,
-                args.vision_tower,
-                args.val_dataset,
-                args.image_size,
-            )
-        else:
-            val_dataset = HybridDataset(
-                args.constrative_dataset_dir,
-                tokenizer,
-                args.vision_tower,
-                samples_per_epoch=10000,
-                precision=args.precision,
-                image_size=args.image_size,
-                num_classes_per_sample=args.num_classes_per_sample,
-                exclude_val=True,
-                dataset=args.dataset,
-                sample_rate=[1],
-                sem_seg_data=args.sem_seg_data,
-                refer_seg_data=args.refer_seg_data,
-                vqa_data=args.vqa_data,
-                reason_seg_data=args.reason_seg_data,
-                explanatory=args.explanatory,
-                const_seg_data = args.const_seg_data)
-
-        print(
-            f"Training with {len(train_dataset)} examples and validating with {len(val_dataset)} examples."
-        )
-    else:
-        val_dataset = None
-        print(f"Training with {len(train_dataset)} examples.")
 
     ds_config = {
         "train_micro_batch_size_per_gpu": args.batch_size,
@@ -384,37 +330,17 @@ def main(args):
         },
     }
 
-
-    # train_sampler = torch.utils.data.distributed.DistributedSampler(
-    #         train_dataset, shuffle=True, drop_last=False
-    #     )
-    train_loader = torch.utils.data.DataLoader(
-            train_dataset,
-            batch_size=args.batch_size,
-            shuffle=True,
-            num_workers=args.workers,
-            pin_memory=False,
-            collate_fn=partial(
-                collate_fn3,
-                tokenizer=tokenizer,
-                conv_type=args.conv_type,
-                use_mm_start_end=args.use_mm_start_end,
-                local_rank=args.local_rank,
-            ),
-        )
-
-    for name,param in model.named_parameters():
-        with open('./grads_'+args.exp_name+".txt", 'a') as the_file:
-            the_file.write(str(name)+":"+str(param.requires_grad)+'\n')
         
     # pdb.set_trace()
     print("****** Loading Pretrained weights ******")
-    model.load_state_dict(torch.load('./runs/xbd_gpu_b1_freeze_s2data/ckpt_model/pytorch_model.bin'),strict=True)
+    model.load_state_dict(torch.load("./runs/lisa-7b-xbd-14days/ckpt_model/pytorch_model.bin"), strict=False)
+
+    model.load_state_dict(torch.load('./runs/stagev2_xbd_fixed_t13/ckpt_model/pytorch_model.bin'),strict=True)
     
     model_engine, optimizer, _, scheduler = deepspeed.initialize(
         model=model,
         model_parameters=model.parameters(),
-        training_data=train_dataset,
+        training_data=val_dataset,
         collate_fn=partial(
             collate_fn3,
             tokenizer=tokenizer,
@@ -424,45 +350,6 @@ def main(args):
         ),
         config=ds_config,
     )
-
-    # resume deepspeed checkpoint
-    if args.auto_resume and len(args.resume) == 0:
-        resume = os.path.join(args.log_dir, "ckpt_model")
-        print('-------------------1')
-        print(resume)
-        print('-------------------')
-        if os.path.exists(resume):
-            args.resume = resume
-    print('-------------------2')
-    print(args.resume)
-    print('-------------------')
-
-    # print(model_engine._get_zero_frozen_param_attributes(model_engine._get_param_shape_func))
-    
-    
-    # pdb.set_trace()
-    if args.resume:
-        print("****** Resuming Training from ******")
-        print("****** UN Freezing intake pipeline ******")
-        
-            
-        print(args.resume)
-        load_path, client_state = model_engine.load_checkpoint(args.resume)
-        with open(os.path.join(args.resume, "latest"), "r") as f:
-            ckpt_dir = f.readlines()[0].strip()
-        args.start_epoch = (
-            int(ckpt_dir.replace("global_step", "")) // args.steps_per_epoch
-        )
-        print(
-            "resume training from {}, start from epoch {}".format(
-                args.resume, args.start_epoch
-            )
-        )
-
-        print("****** Freezing intake pipeline ******")
-        model.cross_attn.train()
-        for param in model.cross_attn.parameters():
-            param.requires_grad = False
     
 
 
@@ -486,10 +373,7 @@ def main(args):
     )
 
     
-    giou, ciou = validate(val_loader, model_engine, epoch, writer, args)
-    is_best = giou > best_score
-    best_score = max(giou, best_score)
-    cur_ciou = ciou if is_best else cur_ciou
+    _,_ = validate(val_loader, model_engine, epoch, writer, args)
 
 
 def validate(val_loader, model_engine, epoch, writer, args):
