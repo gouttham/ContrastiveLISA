@@ -13,7 +13,8 @@ import transformers
 from peft import LoraConfig, get_peft_model
 from torch.utils.tensorboard import SummaryWriter
 
-from model.LISA2 import LISAForCausalLM
+# from model.LISA2 import LISAForCausalLM
+from model.LISA_Dahi import LISAForCausalLM
 from model.llava import conversation as conversation_lib
 from utils.dataset import HybridDataset, ValDataset, collate_fn,collate_fn3
 from utils.utils import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
@@ -39,6 +40,20 @@ import pdb
 #   --steps_per_epoch 1541 \
 #   --const_seg_data s2looking \
 
+# deepspeed --master_port=24999 inference.py \
+#   --version=./mbin/test/LLaVA-7B-Lightening-v1-1/ \
+#   --constrative \
+#   --constrative_dataset_dir=/localscratch/gna23/cd-datasets/ \
+#   --dataset_dir=/localscratch/gna23/cd-datasets/ \
+#   --vision_pretrained=./mbin/sam_vit_h_4b8939.pth \
+#   --vision-tower './mbin/clip-vit-large-patch14' \
+#   --sample_rates='1' \
+#   --epochs='200' \
+#   --dataset='contrastive_cd_dataset' \
+#   --exp_name="inference" \
+#   --batch_size 4 \
+#   --steps_per_epoch 1541 \
+#   --const_seg_data xbd \
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description="LISA Model Training")
