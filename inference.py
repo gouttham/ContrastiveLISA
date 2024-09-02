@@ -206,7 +206,7 @@ def main(args):
     vision_tower.to(dtype=torch_dtype, device=args.local_rank)
 
     if args.constrative:
-        model.cross_attn.load_state_dict(torch.load('./mbin/best_ckpt_b1_mod.pt'), strict=True)
+        model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=True)
         model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
 
