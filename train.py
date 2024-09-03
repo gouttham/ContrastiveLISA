@@ -27,7 +27,12 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import LambdaLR
 from transformers import get_linear_schedule_with_warmup
 
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.utils.data import DistributedSampler
 
+
+dist.init_process_group(backend='nccl')
 
 
 args = my_utils.parse_args(sys.argv[1:])
@@ -176,7 +181,7 @@ train_dataset = HybridDataset(
         )
 
 
-
+train_sampler = DistributedSampler(train_dataset)
 train_loader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=args.batch_size,
@@ -190,6 +195,7 @@ train_loader = torch.utils.data.DataLoader(
                 use_mm_start_end=args.use_mm_start_end,
                 local_rank=args.local_rank,
             ),
+            sampler=train_sampler
         )
 
 # optimizer
@@ -208,12 +214,7 @@ scheduler = get_linear_schedule_with_warmup(
     num_training_steps=total_steps
 )
 # Mixed precision training
-scaler = torch.cuda.amp.GradScaler(enabled=(args.precision in ["fp16", "bf16"]))
-
-
-
-
-
+# scaler = torch.cuda.amp.GradScaler(enabled=(args.precision in ["fp16", "bf16"]))
 
 
 # val_dict = {}
@@ -224,18 +225,17 @@ scaler = torch.cuda.amp.GradScaler(enabled=(args.precision in ["fp16", "bf16"]))
 
 # model.bfloat16()
 # model.to(device=args.local_rank)
+
+
 model.to(dtype=torch_dtype, device=args.local_rank)
+model = DDP(model, device_ids=[0,1,2,3])
 
 model.train()
-
-
 for epoch in range(args.epochs):
+    train_sampler.set_epoch(epoch)
     for train_idx,input_dict in enumerate(train_loader):
 
-
         input_dict = my_utils.typecasting_inputs(input_dict,args)
-
-
 
         output_dict = model(**input_dict)
         loss = output_dict["loss"]
@@ -245,15 +245,12 @@ for epoch in range(args.epochs):
         # Gradient clipping
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
-        # Optimizer step
+
         optimizer.step()
-
-        # Zero gradients
         optimizer.zero_grad()
-
-        # Scheduler step
         scheduler.step()
-        print('loss : ',loss)
+        if dist.get_rank() == 0:
+            print('loss : ',loss)
 
 
 
