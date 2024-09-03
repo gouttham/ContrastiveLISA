@@ -172,11 +172,11 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
             image_embeddings_list = []
             for i in range(pixel_values.shape[0]):
                 torch.cuda.empty_cache()
-                for name, param in self.model.visual_model.image_encoder.named_parameters():
-                    print("************")
-                    print(f"Layer: {name} | Data Type: {param.dtype}")
-                    0/0
-                    break
+                # for name, param in self.model.visual_model.image_encoder.named_parameters():
+                #     print("************")
+                #     print(f"Layer: {name} | Data Type: {param.dtype}")
+                #     0/0
+                #     break
                 image_embeddings = self.model.visual_model.image_encoder(
                     pixel_values[i].unsqueeze(0)
                 )
