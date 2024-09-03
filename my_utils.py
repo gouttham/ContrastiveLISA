@@ -151,4 +151,9 @@ def typecasting_inputs(input_dict,args):
         input_dict["images"] = input_dict["images"].float()
         input_dict["images_clip"] = input_dict["images_clip"].float()
 
+    print("**********")
+    print(input_dict["images"].dtype)
+    print(input_dict["images_clip"].dtype)
+    print("**********")
+
     return input_dict
