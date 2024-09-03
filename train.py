@@ -225,8 +225,11 @@ scheduler = get_linear_schedule_with_warmup(
 # model.to(device=args.local_rank)
 
 
+device = torch.device('cuda')
+
 model = nn.DataParallel(model,device_ids=[0,1,2,3])
 model.to(dtype=torch_dtype)
+
 model.to(torch.device('cuda'))
 
 model.train()
