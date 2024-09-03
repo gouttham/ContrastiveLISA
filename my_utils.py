@@ -1,6 +1,9 @@
 import argparse
 import wandb
 import transformers
+from utils.utils import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
+                         AverageMeter, ProgressMeter, Summary, dict_to_cuda,
+                         intersectionAndUnionGPU)
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description="LISA Model Training")
@@ -133,3 +136,18 @@ def get_model_args(args):
         "constrative": args.constrative,
     }
     return model_args
+
+def typecasting_inputs(input_dict,args):
+    input_dict = dict_to_cuda(input_dict)
+
+    if args.precision == "fp16":
+        input_dict["images"] = input_dict["images"].half()
+        input_dict["images_clip"] = input_dict["images_clip"].half()
+    elif args.precision == "bf16":
+        input_dict["images"] = input_dict["images"].bfloat16()
+        input_dict["images_clip"] = input_dict["images_clip"].bfloat16()
+    else:
+        input_dict["images"] = input_dict["images"].float()
+        input_dict["images_clip"] = input_dict["images_clip"].float()
+
+    return input_dict
