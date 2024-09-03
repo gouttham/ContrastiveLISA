@@ -144,7 +144,6 @@ def typecasting_inputs(input_dict,args):
         input_dict["images"] = input_dict["images"].half()
         input_dict["images_clip"] = input_dict["images_clip"].half()
     elif args.precision == "bf16":
-        print("*****", args.precision, "******")
         input_dict["images"] = input_dict["images"].bfloat16()
         input_dict["images_clip"] = input_dict["images_clip"].bfloat16()
     else:
