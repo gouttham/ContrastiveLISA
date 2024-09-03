@@ -27,12 +27,10 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import LambdaLR
 from transformers import get_linear_schedule_with_warmup
 
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.utils.data import DistributedSampler
+import torch.nn as nn
 
 
-dist.init_process_group(backend='nccl')
+
 
 
 args = my_utils.parse_args(sys.argv[1:])
@@ -181,7 +179,7 @@ train_dataset = HybridDataset(
         )
 
 
-train_sampler = DistributedSampler(train_dataset)
+
 train_loader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=args.batch_size,
@@ -195,7 +193,7 @@ train_loader = torch.utils.data.DataLoader(
                 use_mm_start_end=args.use_mm_start_end,
                 local_rank=args.local_rank,
             ),
-            sampler=train_sampler
+
         )
 
 # optimizer
@@ -227,12 +225,13 @@ scheduler = get_linear_schedule_with_warmup(
 # model.to(device=args.local_rank)
 
 
-model.to(dtype=torch_dtype, device=args.local_rank)
-model = DDP(model, device_ids=[0,1,2,3])
+model = nn.DataParallel(model,device_ids=[0,1,2,3])
+model.to(dtype=torch_dtype)
+model.to(torch.device('cuda'))
 
 model.train()
 for epoch in range(args.epochs):
-    train_sampler.set_epoch(epoch)
+
     for train_idx,input_dict in enumerate(train_loader):
 
         input_dict = my_utils.typecasting_inputs(input_dict,args)
