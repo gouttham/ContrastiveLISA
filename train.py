@@ -229,8 +229,12 @@ for epoch in range(args.epochs):
 
         input_dict = my_utils.typecasting_inputs(input_dict,args)
 
-        with torch.cuda.amp.autocast(enabled=(args.precision in ["fp16", "bf16"])):
+        print("**********")
+        print(input_dict["images"].dtype)
+        print(input_dict["images_clip"].dtype)
+        print("**********")
 
+        with torch.cuda.amp.autocast(enabled=(args.precision in ["fp16", "bf16"])):
             output_dict = model(**input_dict)
             loss = output_dict["loss"]
 
