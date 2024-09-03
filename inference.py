@@ -120,7 +120,7 @@ def parse_args(args):
     parser.add_argument("--explanatory", default=0.1, type=float)
     parser.add_argument("--beta1", default=0.9, type=float)
     parser.add_argument("--beta2", default=0.95, type=float)
-    parser.add_argument("--num_classes_per_sample", default=3, type=int)
+    parser.add_argument("--num_classes_per_sample", default=5, type=int)
     parser.add_argument("--exclude_val", action="store_true", default=False)
     parser.add_argument("--no_eval", action="store_true", default=False)
     parser.add_argument("--eval_only", action="store_true", default=False)
@@ -435,7 +435,15 @@ def validate(val_loader, model_engine, epoch, writer, args):
         assert len(pred_masks) == 1
 
         intersection, union, acc_iou = 0.0, 0.0, 0.0
-        local_ctr=0
+
+        for mask_i, output_i, prmpt in zip(masks_list, output_list, input_dict['sampled_classes_list'][0]):
+            im_array_pred = output_i.cpu().numpy().astype(np.uint8)
+            im_array_gt = mask_i.cpu().numpy().astype(np.uint8)
+
+            cv2.imwrite(os.path.join(save_dir, str(prmpt) + "_pd_" + save_name), im_array_pred)
+            cv2.imwrite(os.path.join(save_dir, str(prmpt) + "_gt_" + save_name), im_array_gt)
+
+        local_ctr = 0
         for mask_i, output_i,prmpt in zip(masks_list, output_list,input_dict['sampled_classes_list'][0]):
 
             im_array = output_i.cpu().numpy()
