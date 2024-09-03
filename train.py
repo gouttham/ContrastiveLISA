@@ -66,7 +66,7 @@ if args.precision == "bf16":
 elif args.precision == "fp16":
     torch_dtype = torch.half
 model = LISAForCausalLM.from_pretrained(args.version, torch_dtype=torch_dtype, low_cpu_mem_usage=True, **model_args)
-model.train()
+
 
 model.config.eos_token_id = tokenizer.eos_token_id
 model.config.bos_token_id = tokenizer.bos_token_id
@@ -81,9 +81,8 @@ vision_tower = model.get_model().get_vision_tower()
 vision_tower.to(dtype=torch_dtype, device=args.local_rank)
 
 if args.constrative:
-    if os.path.exists('./mbin/cross_attn_dahi.pt'):
-        model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=True)
-        model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
+    model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=True)
+    model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
 print("****** Loading Pretrained weights ******")
 model.load_state_dict(torch.load("./runs/lisa-7b-xbd-14days/ckpt_model/pytorch_model.bin"),strict=False)
@@ -96,7 +95,7 @@ for p in vision_tower.parameters():
 for p in model.get_model().mm_projector.parameters():
     p.requires_grad = False
 
-
+conversation_lib.default_conversation = conversation_lib.conv_templates[args.conv_type]
 
 lora_r = args.lora_r
 if lora_r > 0:
@@ -152,26 +151,6 @@ for param in model.cross_attn.parameters():
 
 
 
-# optimizer
-
-optimizer = optim.AdamW(
-    model.parameters(),
-    lr=args.lr,
-    betas=(args.beta1, args.beta2),
-    weight_decay=0.0
-)
-# Learning rate scheduler setup
-total_steps = args.epochs * args.steps_per_epoch
-scheduler = get_linear_schedule_with_warmup(
-    optimizer,
-    num_warmup_steps=100,
-    num_training_steps=total_steps
-)
-# Mixed precision training
-scaler = torch.cuda.amp.GradScaler(enabled=(args.precision in ["fp16", "bf16"]))
-
-
-conversation_lib.default_conversation = conversation_lib.conv_templates[args.conv_type]
 
 train_dataset = HybridDataset(
             args.constrative_dataset_dir,
@@ -209,6 +188,29 @@ train_loader = torch.utils.data.DataLoader(
             ),
         )
 
+# optimizer
+
+optimizer = optim.AdamW(
+    model.parameters(),
+    lr=args.lr,
+    betas=(args.beta1, args.beta2),
+    weight_decay=0.0
+)
+# Learning rate scheduler setup
+total_steps = args.epochs * args.steps_per_epoch
+scheduler = get_linear_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=100,
+    num_training_steps=total_steps
+)
+# Mixed precision training
+scaler = torch.cuda.amp.GradScaler(enabled=(args.precision in ["fp16", "bf16"]))
+
+
+
+
+
+
 
 # val_dict = {}
 # for ech in range(len(train_dataset)):
@@ -222,7 +224,7 @@ for epoch in range(args.epochs):
 
 
         input_dict = my_utils.typecasting_inputs(input_dict,args)
-        print("After typecasting")
+
         with torch.cuda.amp.autocast(enabled=(args.precision in ["fp16", "bf16"])):
 
             output_dict = model(**input_dict)
