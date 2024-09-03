@@ -218,7 +218,8 @@ train_loader = torch.utils.data.DataLoader(
 
 for epoch in range(args.epochs):
     for train_idx,input_dict in enumerate(train_loader):
-        print(train_idx)
+
+        input_dict = dict_to_cuda(input_dict)
         with torch.cuda.amp.autocast(enabled=(args.precision in ["fp16", "bf16"])):
             output_dict = model(**input_dict)
             loss = output_dict["loss"]
