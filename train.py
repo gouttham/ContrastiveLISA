@@ -61,6 +61,9 @@ model_args = my_utils.get_model_args(args)
 
 
 torch_dtype = torch.float32
+
+print("*****",args.precision,"******")
+
 if args.precision == "bf16":
     torch_dtype = torch.bfloat16
 elif args.precision == "fp16":
