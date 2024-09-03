@@ -396,7 +396,8 @@ def validate(val_loader, model_engine, epoch, writer, args):
     union_meter = AverageMeter("Union", ":6.3f", Summary.SUM)
     acc_iou_meter = AverageMeter("gIoU", ":6.3f", Summary.SUM)
 
-    save_dir = "./visualize_"+args.exp_name+"/"
+    save_dir_iou = "./visualize_iou_"+args.exp_name+"/"
+    save_dir = "./visualize_" + args.exp_name + "/"
     try:
         if os.path.exists(save_dir):
             shutil.rmtree(save_dir)
@@ -440,8 +441,8 @@ def validate(val_loader, model_engine, epoch, writer, args):
             im_array_pred = output_i.cpu().numpy().astype(np.uint8)
             im_array_gt = mask_i.cpu().numpy().astype(np.uint8)
 
-            cv2.imwrite(os.path.join(save_dir, str(prmpt) + "_pd_" + save_name), im_array_pred)
-            cv2.imwrite(os.path.join(save_dir, str(prmpt) + "_gt_" + save_name), im_array_gt)
+            cv2.imwrite(os.path.join(save_dir_iou, str(prmpt) + "_pd_" + save_name), im_array_pred)
+            cv2.imwrite(os.path.join(save_dir_iou, str(prmpt) + "_gt_" + save_name), im_array_gt)
 
         local_ctr = 0
         for mask_i, output_i,prmpt in zip(masks_list, output_list,input_dict['sampled_classes_list'][0]):
