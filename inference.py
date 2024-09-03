@@ -403,7 +403,14 @@ def validate(val_loader, model_engine, epoch, writer, args):
             shutil.rmtree(save_dir)
         os.makedirs(save_dir)
     except:
-        print("Error deleting")
+        print("Error deleting ",save_dir)
+
+    try:
+        if os.path.exists(save_dir_iou):
+            shutil.rmtree(save_dir_iou)
+        os.makedirs(save_dir_iou)
+    except:
+        print("Error deleting ",save_dir_iou)
 
     model_engine.eval()
     
