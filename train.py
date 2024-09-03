@@ -223,6 +223,8 @@ scaler = torch.cuda.amp.GradScaler(enabled=(args.precision in ["fp16", "bf16"]))
 #     val_dict[name] = int(val_dict.get(name,0)) + 1
 
 model.bfloat16()
+model.to(device=args.local_rank)
+
 model.train()
 for epoch in range(args.epochs):
     for train_idx,input_dict in enumerate(train_loader):
