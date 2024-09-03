@@ -225,7 +225,7 @@ scheduler = get_linear_schedule_with_warmup(
 # model.to(device=args.local_rank)
 
 
-device = torch.device('cuda')
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 model = nn.DataParallel(model,device_ids=[0,1,2,3])
 model.to(dtype=torch_dtype)
@@ -237,7 +237,7 @@ for epoch in range(args.epochs):
 
     for train_idx,input_dict in enumerate(train_loader):
 
-        input_dict = my_utils.typecasting_inputs(input_dict,args)
+        input_dict = my_utils.typecasting_inputs(input_dict,args,device)
 
         output_dict = model(**input_dict)
         loss = output_dict["loss"]

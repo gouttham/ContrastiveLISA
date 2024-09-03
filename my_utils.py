@@ -1,6 +1,7 @@
 import argparse
 import wandb
 import transformers
+import torch
 from utils.utils import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
                          AverageMeter, ProgressMeter, Summary, dict_to_cuda,
                          intersectionAndUnionGPU)
@@ -137,8 +138,19 @@ def get_model_args(args):
     }
     return model_args
 
-def typecasting_inputs(input_dict,args):
-    input_dict = dict_to_cuda(input_dict)
+def dict_to_cuda2(input_dict,device):
+    for k, v in input_dict.items():
+        if isinstance(input_dict[k], torch.Tensor):
+            input_dict[k] = v.to(device)
+        elif (
+            isinstance(input_dict[k], list)
+            and len(input_dict[k]) > 0
+            and isinstance(input_dict[k][0], torch.Tensor)
+        ):
+            input_dict[k] = [ele.to(device) for ele in v]
+    return input_dict
+def typecasting_inputs(input_dict,args,device):
+    input_dict = dict_to_cuda2(input_dict,device)
 
     if args.precision == "fp16":
         input_dict["images"] = input_dict["images"].half()

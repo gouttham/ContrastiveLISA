@@ -150,27 +150,14 @@ class ProgressMeter(object):
         return "[" + fmt + "/" + fmt.format(num_batches) + "]"
 
 
-# def dict_to_cuda(input_dict):
-#     for k, v in input_dict.items():
-#         if isinstance(input_dict[k], torch.Tensor):
-#             input_dict[k] = v.cuda(non_blocking=True)
-#         elif (
-#             isinstance(input_dict[k], list)
-#             and len(input_dict[k]) > 0
-#             and isinstance(input_dict[k][0], torch.Tensor)
-#         ):
-#             input_dict[k] = [ele.cuda(non_blocking=True) for ele in v]
-#     return input_dict
-
-
 def dict_to_cuda(input_dict):
     for k, v in input_dict.items():
         if isinstance(input_dict[k], torch.Tensor):
-            input_dict[k] = v.to(torch.device('cuda'))
+            input_dict[k] = v.cuda(non_blocking=True)
         elif (
             isinstance(input_dict[k], list)
             and len(input_dict[k]) > 0
             and isinstance(input_dict[k][0], torch.Tensor)
         ):
-            input_dict[k] = [ele.to(torch.device('cuda')) for ele in v]
+            input_dict[k] = [ele.cuda(non_blocking=True) for ele in v]
     return input_dict
