@@ -227,29 +227,26 @@ scaler = torch.cuda.amp.GradScaler(enabled=(args.precision in ["fp16", "bf16"]))
 model.to(dtype=torch_dtype, device=args.local_rank)
 
 model.train()
+
+
 for epoch in range(args.epochs):
     for train_idx,input_dict in enumerate(train_loader):
 
 
         input_dict = my_utils.typecasting_inputs(input_dict,args)
 
-        print("**********")
-        print(input_dict["images"].dtype)
-        print(input_dict["images_clip"].dtype)
-        print("**********")
 
-        # with torch.cuda.amp.autocast(enabled=(args.precision in ["fp16", "bf16"])):
+
         output_dict = model(**input_dict)
         loss = output_dict["loss"]
 
-        scaler.scale(loss).backward()
+        loss.backward()
+
         # Gradient clipping
-        scaler.unscale_(optimizer)  # Unscale gradients before clipping
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
         # Optimizer step
-        scaler.step(optimizer)
-        scaler.update()
+        optimizer.step()
 
         # Zero gradients
         optimizer.zero_grad()
@@ -257,4 +254,39 @@ for epoch in range(args.epochs):
         # Scheduler step
         scheduler.step()
         print('loss : ',loss)
+
+
+
+
+
+# for epoch in range(args.epochs):
+#     for train_idx,input_dict in enumerate(train_loader):
+#
+#
+#         input_dict = my_utils.typecasting_inputs(input_dict,args)
+#
+#         print("**********")
+#         print(input_dict["images"].dtype)
+#         print(input_dict["images_clip"].dtype)
+#         print("**********")
+#
+#         # with torch.cuda.amp.autocast(enabled=(args.precision in ["fp16", "bf16"])):
+#         output_dict = model(**input_dict)
+#         loss = output_dict["loss"]
+#
+#         scaler.scale(loss).backward()
+#         # Gradient clipping
+#         scaler.unscale_(optimizer)  # Unscale gradients before clipping
+#         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+#
+#         # Optimizer step
+#         scaler.step(optimizer)
+#         scaler.update()
+#
+#         # Zero gradients
+#         optimizer.zero_grad()
+#
+#         # Scheduler step
+#         scheduler.step()
+#         print('loss : ',loss)
 
