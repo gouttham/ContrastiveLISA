@@ -149,7 +149,7 @@ model.resize_token_embeddings(len(tokenizer))
 for n, p in model.named_parameters():
     if any([x in n for x in ["lm_head", "embed_tokens", "mask_decoder", "text_hidden_fcs", "lora_"]]):
         print("n: ", n, "p.shape: ", p.shape)
-        p.requires_grad = False
+        p.requires_grad = True
 
 model.cross_attn.train()
 for param in model.cross_attn.parameters():
