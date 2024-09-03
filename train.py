@@ -238,9 +238,9 @@ for epoch in range(args.epochs):
         print(input_dict["images_clip"].dtype)
         print("**********")
 
-        with torch.cuda.amp.autocast(enabled=(args.precision in ["fp16", "bf16"])):
-            output_dict = model(**input_dict)
-            loss = output_dict["loss"]
+        # with torch.cuda.amp.autocast(enabled=(args.precision in ["fp16", "bf16"])):
+        output_dict = model(**input_dict)
+        loss = output_dict["loss"]
 
         scaler.scale(loss).backward()
         # Gradient clipping
