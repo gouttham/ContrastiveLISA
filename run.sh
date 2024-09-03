@@ -7,7 +7,11 @@ deepspeed --master_port=24999 train_stage_1.py \
   --sample_rates='1' \
   --epochs='200' \
   --dataset='contrastive_cd_dataset' \
-  --exp_name="stagev1_xbd_fixed_t13" \
+  --exp_name="debbug" \
   --batch_size 4 \
   --steps_per_epoch 1541 \
   --const_seg_data "xbd"
+
+
+
+#  --exp_name="stagev1_xbd_fixed_t13" \
