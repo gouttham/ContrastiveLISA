@@ -225,11 +225,13 @@ scheduler = get_linear_schedule_with_warmup(
 # model.to(device=args.local_rank)
 
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-model = nn.DataParallel(model,device_ids=[0,1,2,3])
+device = torch.device("cuda:0")
+
+# model = nn.DataParallel(model,device_ids=[0,1,2,3])
+
 model = model.to(dtype=torch_dtype)
-
 model = model.to(device)
 
 model.train()
@@ -252,7 +254,7 @@ for epoch in range(args.epochs):
         optimizer.zero_grad()
         scheduler.step()
 
-        print('loss : ',loss)
+        print("epoch : ",epoch,' loss : ',loss)
 
 
 
