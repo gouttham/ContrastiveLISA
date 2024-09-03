@@ -248,8 +248,8 @@ for epoch in range(args.epochs):
         optimizer.step()
         optimizer.zero_grad()
         scheduler.step()
-        if dist.get_rank() == 0:
-            print('loss : ',loss)
+
+        print('loss : ',loss)
 
 
 
