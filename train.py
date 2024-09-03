@@ -23,23 +23,31 @@ import cv2
 import random
 
 import my_utils
+import torch.optim as optim
+from torch.optim.lr_scheduler import LambdaLR
+from transformers import get_linear_schedule_with_warmup
 
 
 
 
 args = my_utils.parse_args(sys.argv[1:])
 
+args.exp_name = "new_pipeline_dev"
+args.const_seg_data="xbd"
+
 # args.local_rank = "cpu"
-# args.exp_name = "cpu_dev"
 # args.version = "mmaaz60/LLaVA-7B-Lightening-v1-1"
 # args.vision_pretrained="./mbin/sam_vit_h_4b8939.pth"
+# args.workers = 0
+
 
 
 wandb = my_utils.wandb_init(args)
 
 
 tokenizer = my_utils.get_tokenizer(args)
-'''
+
+
 tokenizer.pad_token = tokenizer.unk_token
 num_added_tokens = tokenizer.add_tokens("[SEG]")
 args.seg_token_idx = tokenizer("[SEG]", add_special_tokens=False).input_ids[0]
@@ -74,6 +82,10 @@ if args.constrative:
         model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=True)
         model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
+print("****** Loading Pretrained weights ******")
+model.load_state_dict(torch.load("./runs/lisa-7b-xbd-14days/ckpt_model/pytorch_model.bin"),strict=False)
+
+
 model.get_model().initialize_lisa_modules(model.get_model().config)
 
 for p in vision_tower.parameters():
@@ -81,7 +93,7 @@ for p in vision_tower.parameters():
 for p in model.get_model().mm_projector.parameters():
     p.requires_grad = False
 
-conversation_lib.default_conversation = conversation_lib.conv_templates[args.conv_type]
+
 
 lora_r = args.lora_r
 if lora_r > 0:
@@ -129,14 +141,34 @@ for n, p in model.named_parameters():
     if any([x in n for x in ["lm_head", "embed_tokens", "mask_decoder", "text_hidden_fcs", "lora_"]]):
         print("n: ", n, "p.shape: ", p.shape)
         p.requires_grad = False
-        
+
 model.cross_attn.train()
 for param in model.cross_attn.parameters():
     param.requires_grad = True
-'''
 
-# args.workers = 0
-# args.const_seg_data="xbd||s2looking"
+
+
+
+# optimizer
+
+optimizer = optim.AdamW(
+    model.parameters(),
+    lr=args.lr,
+    betas=(args.beta1, args.beta2),
+    weight_decay=0.0
+)
+# Learning rate scheduler setup
+total_steps = args.epochs * args.steps_per_epoch
+scheduler = get_linear_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=100,
+    num_training_steps=total_steps
+)
+# Mixed precision training
+scaler = torch.cuda.amp.GradScaler(enabled=(args.precision in ["fp16", "bf16"]))
+
+
+conversation_lib.default_conversation = conversation_lib.conv_templates[args.conv_type]
 
 train_dataset = HybridDataset(
             args.constrative_dataset_dir,
@@ -181,6 +213,26 @@ train_loader = torch.utils.data.DataLoader(
 #     name = train_dataset.__getitem__(ech)[0][0]
 #     val_dict[name] = int(val_dict.get(name,0)) + 1
 
-for train_idx,input_dict in enumerate(train_loader):
-    print(train_idx)
-    # print(input_dict.keys())
+for epoch in range(args.epochs):
+    for train_idx,input_dict in enumerate(train_loader):
+        print(train_idx)
+        with torch.cuda.amp.autocast(enabled=(args.precision in ["fp16", "bf16"])):
+            output_dict = model(**input_dict)
+            loss = output_dict["loss"]
+
+        scaler.scale(loss).backward()
+        # Gradient clipping
+        scaler.unscale_(optimizer)  # Unscale gradients before clipping
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+
+        # Optimizer step
+        scaler.step(optimizer)
+        scaler.update()
+
+        # Zero gradients
+        optimizer.zero_grad()
+
+        # Scheduler step
+        scheduler.step()
+        print('loss : ',loss)
+
