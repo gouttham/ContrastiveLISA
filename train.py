@@ -230,7 +230,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = nn.DataParallel(model,device_ids=[0,1,2,3])
 model.to(dtype=torch_dtype)
 
-model.to(torch.device('cuda'))
+model.to(device)
 
 model.train()
 for epoch in range(args.epochs):
