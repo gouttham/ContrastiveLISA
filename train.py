@@ -222,6 +222,7 @@ for epoch in range(args.epochs):
 
 
         input_dict = my_utils.typecasting_inputs(input_dict,args)
+        print("After typecasting")
         with torch.cuda.amp.autocast(enabled=(args.precision in ["fp16", "bf16"])):
 
             output_dict = model(**input_dict)
