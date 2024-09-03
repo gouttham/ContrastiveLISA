@@ -23,6 +23,7 @@ from utils.utils import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
 from utils.cd_dataset import Contrastive_CD_Dataset
 import cv2
 import pdb
+import metrics
 
 
 # deepspeed --master_port=24999 inference.py \
@@ -349,8 +350,8 @@ def main(args):
     # pdb.set_trace()
     print("****** Loading Pretrained weights ******")
     model.load_state_dict(torch.load("./runs/lisa-7b-xbd-14days/ckpt_model/pytorch_model.bin"), strict=False)
-
-    model.load_state_dict(torch.load('./runs/stagev2_xbd_fixed_t13/ckpt_model/pytorch_model.bin'),strict=True)
+    model.load_state_dict(torch.load('./runs/stagev1_xbd_fixed_t13/ckpt_model/pytorch_model.bin'), strict=True)
+    # model.load_state_dict(torch.load('./runs/stagev2_xbd_fixed_t13/ckpt_model/pytorch_model.bin'),strict=True)
     
     model_engine, optimizer, _, scheduler = deepspeed.initialize(
         model=model,
@@ -388,7 +389,9 @@ def main(args):
     )
 
     
-    _,_ = validate(val_loader, model_engine, epoch, writer, args)
+    save_dir_iou = validate(val_loader, model_engine, epoch, writer, args)
+    metrics.get_iou(save_dir_iou)
+
 
 
 def validate(val_loader, model_engine, epoch, writer, args):
@@ -504,8 +507,9 @@ def validate(val_loader, model_engine, epoch, writer, args):
         writer.add_scalar("val/ciou", ciou, epoch)
         print("giou: {:.4f}, ciou: {:.4f}".format(giou, ciou))
 
-    return giou, ciou
+    return save_dir_iou
 
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+
