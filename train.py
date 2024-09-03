@@ -35,6 +35,8 @@ args = my_utils.parse_args(sys.argv[1:])
 args.exp_name = "new_pipeline_dev"
 args.const_seg_data="xbd"
 args.version="./mbin/test/LLaVA-7B-Lightening-v1-1/"
+args.constrative_dataset_dir="/localscratch/gna23/cd-datasets/"
+args.dataset_dir="/localscratch/gna23/cd-datasets/"
 
 # args.local_rank = "cpu"
 # args.version = "mmaaz60/LLaVA-7B-Lightening-v1-1"
