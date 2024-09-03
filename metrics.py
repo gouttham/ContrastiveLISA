@@ -31,6 +31,8 @@ def get_iou(root):
     iou_dict = {}
     for ech in class_wise_dict.keys():
         for ech_img in class_wise_dict[ech]:
+            if "_gt_" in ech_img:
+                continue
             pd = cv2.imread(ech_img)
             gt = cv2.imread(ech_img.replace('_pd_','_gt_'))
 
