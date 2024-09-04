@@ -41,6 +41,8 @@ args.version="./mbin/test/LLaVA-7B-Lightening-v1-1/"
 args.constrative_dataset_dir="/localscratch/gna23/cd-datasets/"
 args.dataset_dir="/localscratch/gna23/cd-datasets/"
 
+args.num_classes_per_sample = 5
+
 # args.local_rank = "cpu"
 # args.version = "mmaaz60/LLaVA-7B-Lightening-v1-1"
 # args.vision_pretrained="./mbin/sam_vit_h_4b8939.pth"
