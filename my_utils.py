@@ -108,7 +108,6 @@ def wandb_init(args):
             "batch_size": args.batch_size,
             "steps_per_epoch": args.steps_per_epoch,
             "dataset": args.const_seg_data,
-            "grad_accumulation_steps": args.grad_accumulation_steps,
         }
     )
     return wandb

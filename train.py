@@ -32,7 +32,6 @@ import torch.nn as nn
 
 
 
-
 args = my_utils.parse_args(sys.argv[1:])
 
 args.exp_name = "new_pipeline_dev"
@@ -165,7 +164,7 @@ train_dataset = HybridDataset(
             args.constrative_dataset_dir,
             tokenizer,
             args.vision_tower,
-            samples_per_epoch=10000,
+            samples_per_epoch=3000,
             precision=args.precision,
             image_size=args.image_size,
             num_classes_per_sample=args.num_classes_per_sample,
@@ -179,8 +178,6 @@ train_dataset = HybridDataset(
             explanatory=args.explanatory,
             const_seg_data = args.const_seg_data
         )
-
-
 
 train_loader = torch.utils.data.DataLoader(
             train_dataset,
@@ -197,6 +194,42 @@ train_loader = torch.utils.data.DataLoader(
             ),
 
         )
+
+val_dataset = HybridDataset(
+            args.constrative_dataset_dir,
+            tokenizer,
+            args.vision_tower,
+            samples_per_epoch=3000,
+            precision=args.precision,
+            image_size=args.image_size,
+            num_classes_per_sample=args.num_classes_per_sample,
+            exclude_val=True,
+            dataset=args.dataset,
+            sample_rate=[1],
+            sem_seg_data=args.sem_seg_data,
+            refer_seg_data=args.refer_seg_data,
+            vqa_data=args.vqa_data,
+            reason_seg_data=args.reason_seg_data,
+            explanatory=args.explanatory,
+            const_seg_data = args.const_seg_data
+        )
+
+val_loader = torch.utils.data.DataLoader(
+            val_dataset,
+            batch_size=args.batch_size,
+            shuffle=True,
+            num_workers=args.workers,
+            pin_memory=False,
+            collate_fn=partial(
+                collate_fn3,
+                tokenizer=tokenizer,
+                conv_type=args.conv_type,
+                use_mm_start_end=args.use_mm_start_end,
+                local_rank=args.local_rank,
+            ),
+
+        )
+
 
 # optimizer
 
@@ -236,9 +269,16 @@ device = torch.device("cuda:0")
 model = model.to(dtype=torch_dtype)
 model = model.to(device)
 
-model.train()
+
 for epoch in range(args.epochs):
 
+    losses = AverageMeter("Loss", ":.4f")
+    ce_losses = AverageMeter("CeLoss", ":.4f")
+    mask_bce_losses = AverageMeter("MaskBCELoss", ":.4f")
+    mask_dice_losses = AverageMeter("MaskDICELoss", ":.4f")
+    mask_losses = AverageMeter("MaskLoss", ":.4f")
+
+    model.train()
     for train_idx,input_dict in enumerate(train_loader):
 
         input_dict = my_utils.typecasting_inputs(input_dict,args,device)
@@ -256,7 +296,62 @@ for epoch in range(args.epochs):
         optimizer.zero_grad()
         scheduler.step()
 
-        print("epoch : ",epoch,' loss : ',loss)
+        losses.update(loss.item(), input_dict["images"].size(0))
+        ce_losses.update(output_dict["ce_loss"].item(), input_dict["images"].size(0))
+        mask_bce_losses.update(output_dict["mask_bce_loss"].item(), input_dict["images"].size(0))
+        mask_dice_losses.update(output_dict["mask_dice_loss"].item(), input_dict["images"].size(0))
+        mask_losses.update(output_dict["mask_loss"].item(), input_dict["images"].size(0))
+
+        if train_idx % 100 ==0:
+            print("epoch : ",epoch,' loss : ',loss.item())
+            wandb.log({
+                "train/loss":losses.avg,
+                "train/ce_loss": ce_losses.avg,
+                "train/mask_bce_loss": mask_bce_losses.avg,
+                "train/mask_dice_loss": mask_dice_losses.avg,
+                "train/mask_loss": mask_losses.avg,
+                "train/lr": optimizer.param_groups[0]['lr']
+            })
+
+
+    model.eval()
+    iou_dict = {}
+    for val_idx, input_dict in enumerate(val_loader):
+        input_dict = my_utils.typecasting_inputs(input_dict, args, device)
+
+        with torch.no_grad():
+            output_dict = model(**input_dict)
+
+        pred_masks = output_dict["pred_masks"]
+        masks_list = output_dict["gt_masks"][0].int()
+        output_list = (pred_masks[0] > 0).int()
+
+        for mask_i, output_i, prmpt in zip(masks_list, output_list, input_dict['sampled_classes_list'][0]):
+            pd = output_i.cpu().numpy().astype(np.uint8)
+            gt = mask_i.cpu().numpy().astype(np.uint8)
+            intersection = np.logical_and(pd, gt)
+            union = np.logical_or(pd, gt)
+            iou_score = np.sum(intersection) / np.sum(union)
+
+            iou_lists = iou_dict.get(prmpt, [])
+            iou_lists.append(iou_score)
+            iou_dict[prmpt] = iou_lists
+
+    total_avg = []
+    wandb_dict = {}
+    for ech in iou_dict:
+        cur_avg = np.average(iou_dict[ech])
+        wandb_dict['val/'+ech]=cur_avg
+        total_avg.append(cur_avg)
+    wandb_dict['val/iou'] = np.average(total_avg)
+    wandb.log(wandb_dict)
+
+
+
+
+
+
+
 
 
 

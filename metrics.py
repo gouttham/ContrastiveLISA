@@ -49,7 +49,7 @@ def get_iou(root):
         cur_avg = np.average(iou_dict[ech])
         print(ech, cur_avg)
         total_avg.append(cur_avg)
-    print('iou : ', np.average(cur_avg))
+    print('iou : ', np.average(total_avg))
 
 if __name__ == "__main__":
     root = "./visualize_iou_inference/"
