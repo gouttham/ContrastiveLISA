@@ -280,6 +280,7 @@ for epoch in range(args.epochs):
 
     model.train()
     for train_idx,input_dict in enumerate(train_loader):
+        print(train_idx,end='\r')
 
         input_dict = my_utils.typecasting_inputs(input_dict,args,device)
 
@@ -303,7 +304,7 @@ for epoch in range(args.epochs):
         mask_losses.update(output_dict["mask_loss"].item(), input_dict["images"].size(0))
 
         if train_idx % 100 ==0:
-            print("epoch : ",epoch,' loss : ',loss.item())
+            print("epoch : ",epoch," iter : ",train_idx," loss : ",loss.item())
             wandb.log({
                 "train/loss":losses.avg,
                 "train/ce_loss": ce_losses.avg,
