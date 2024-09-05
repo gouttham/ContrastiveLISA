@@ -313,11 +313,13 @@ for epoch in range(args.epochs):
                 "train/mask_loss": mask_losses.avg,
                 "train/lr": optimizer.param_groups[0]['lr']
             })
+        break
 
-
+    print("Eval pipeline")
     model.eval()
     iou_dict = {}
     for val_idx, input_dict in enumerate(val_loader):
+        print(val_idx, end='\r')
         input_dict = my_utils.typecasting_inputs(input_dict, args, device)
 
         with torch.no_grad():
