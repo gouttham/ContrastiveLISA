@@ -49,7 +49,7 @@ def parse_args(args):
     parser.add_argument("--constrative", action="store_true", default=True)
     parser.add_argument("--log_base_dir", default="./runs", type=str)
     parser.add_argument("--exp_name", default="lisa", type=str)
-    parser.add_argument("--epochs", default=10, type=int)
+    parser.add_argument("--epochs", default=100, type=int)
     parser.add_argument("--steps_per_epoch", default=500, type=int)
     parser.add_argument(
         "--batch_size", default=2, type=int, help="batch size per device per step"
