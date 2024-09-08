@@ -168,7 +168,7 @@ train_dataset = HybridDataset(
             precision=args.precision,
             image_size=args.image_size,
             num_classes_per_sample=args.num_classes_per_sample,
-            exclude_val=False,
+            exclude_val=True,
             dataset=args.dataset,
             sample_rate=[1],
             sem_seg_data=args.sem_seg_data,
@@ -269,7 +269,10 @@ device = torch.device("cuda:0")
 model = model.to(dtype=torch_dtype)
 model = model.to(device)
 
-
+clss = [
+    "no building","undamaged building", "building with minor damage",
+    "building with major damage", "completely destroyed building"
+]
 for epoch in range(args.epochs):
 
     losses = AverageMeter("Loss", ":.4f")
@@ -280,6 +283,7 @@ for epoch in range(args.epochs):
 
     model.train()
     for train_idx,input_dict in enumerate(train_loader):
+        break
         print(train_idx,end='\r')
 
         input_dict = my_utils.typecasting_inputs(input_dict,args,device)
@@ -313,7 +317,7 @@ for epoch in range(args.epochs):
                 "train/mask_loss": mask_losses.avg,
                 "train/lr": optimizer.param_groups[0]['lr']
             })
-        break
+        # break
 
     print("Eval pipeline")
     model.eval()
@@ -324,6 +328,9 @@ for epoch in range(args.epochs):
         print(val_idx, end='\r')
         input_dict = my_utils.typecasting_inputs(input_dict, args, device)
         input_dict['inference'] = True
+
+        save_name = input_dict['image_paths'][0][0].split('/')[-1]
+
         with torch.no_grad():
             output_dict = model(**input_dict)
 
@@ -331,19 +338,33 @@ for epoch in range(args.epochs):
         masks_list = output_dict["gt_masks"][0].int()
         output_list = (pred_masks[0] > 0).int()
 
+        log_exp_img = []
         for mask_i, output_i, prmpt in zip(masks_list, output_list, input_dict['sampled_classes_list'][0]):
             pd = output_i.cpu().numpy().astype(np.uint8)
             gt = mask_i.cpu().numpy().astype(np.uint8)
             intersection = np.logical_and(pd, gt)
             union = np.logical_or(pd, gt)
             iou_score = np.sum(intersection) / np.sum(union)
-
+            # if iou_score == None or iou_score == 'NaN':
+                # iou_score = 0
             iou_lists = iou_dict.get(prmpt, [])
             iou_lists.append(iou_score)
             iou_dict[prmpt] = iou_lists
 
-        if val_idx>100:
-            break
+
+            pd = cv2.cvtColor(cv2.resize(pd, (224, 224)), cv2.COLOR_GRAY2RGB)
+            gt = cv2.cvtColor(cv2.resize(gt, (224, 224)), cv2.COLOR_GRAY2RGB)
+
+            sv_image = np.zeros([224, 448, 3], np.uint8)
+            sv_image[:224, :224] = pd
+            sv_image[:224, 224:] = gt
+
+            cv2.putText(sv_image, prmpt, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 1)
+            temp_name_i = str(clss.index(prmpt)) + "_" + save_name
+            log_exp_img.append(wandb.Image(sv_image, caption=f"{temp_name_i}"))
+
+        wandb.log({"visualization": log_exp_img})
+
 
     total_avg = []
     wandb_dict = {}
