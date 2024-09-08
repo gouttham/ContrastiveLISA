@@ -342,6 +342,9 @@ for epoch in range(args.epochs):
             iou_lists.append(iou_score)
             iou_dict[prmpt] = iou_lists
 
+        if val_idx>100:
+            break
+
     total_avg = []
     wandb_dict = {}
     for ech in iou_dict:
