@@ -323,7 +323,7 @@ for epoch in range(args.epochs):
                 "train/mask_loss": mask_losses.avg,
                 "train/lr": optimizer.param_groups[0]['lr']
             })
-        # break
+        break
 
     print("Eval pipeline")
     model.eval()
@@ -374,7 +374,11 @@ for epoch in range(args.epochs):
             # log_exp_img.append(wandb.Image(sv_image, caption=f"{temp_name_i}"))
 
         for ech_cls in ['0','1','2','3','4']:
-            log_exp_img.append(image_logger[ech_cls])
+            if ech_cls in image_logger:
+                log_exp_img.append(image_logger[ech_cls])
+            else:
+                log_exp_img.append(wandb.Image(sv_image * 0, caption=f"{ech_cls}_fillers"))
+
 
         wandb.log({"visualization": log_exp_img})
 
