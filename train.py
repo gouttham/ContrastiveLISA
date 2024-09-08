@@ -346,7 +346,7 @@ for epoch in range(args.epochs):
             union = np.logical_or(pd, gt)
             iou_score = np.sum(intersection) / np.sum(union)
             print("iou_score : ",iou_score)
-            if iou_score == None or iou_score == 'NaN':
+            if np.isnan(iou_score):
                 print("Caught")
                 # iou_score = 0
             iou_lists = iou_dict.get(prmpt, [])
