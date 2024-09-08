@@ -199,7 +199,7 @@ val_dataset = HybridDataset(
             args.constrative_dataset_dir,
             tokenizer,
             args.vision_tower,
-            samples_per_epoch=3000,
+            samples_per_epoch=1200,
             precision=args.precision,
             image_size=args.image_size,
             num_classes_per_sample=args.num_classes_per_sample,
