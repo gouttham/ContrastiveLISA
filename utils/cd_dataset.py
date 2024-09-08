@@ -699,7 +699,9 @@ class Contrastive_CD_Dataset(torch.utils.data.Dataset):
         # if ds == 'xbd':
         #     if 0 in unique_label:
         #         unique_label.remove(0)
-        unique_label = [0,1,2,3,4]
+
+        # to train with all classes
+        # unique_label = [0,1,2,3,4]
         classes = [self.data2classes[ds][class_id] for class_id in unique_label]
         if len(classes) >= self.num_classes_per_sample:
             sampled_classes = np.random.choice(

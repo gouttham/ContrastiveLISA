@@ -39,6 +39,7 @@ args.const_seg_data="xbd"
 args.version="./mbin/test/LLaVA-7B-Lightening-v1-1/"
 args.constrative_dataset_dir="/localscratch/gna23/cd-datasets/"
 args.dataset_dir="/localscratch/gna23/cd-datasets/"
+args.use_scheduler = False
 
 args.num_classes_per_sample = 5
 
@@ -239,13 +240,17 @@ optimizer = optim.AdamW(
     betas=(args.beta1, args.beta2),
     weight_decay=0.0
 )
-# Learning rate scheduler setup
-total_steps = args.epochs * args.steps_per_epoch
-scheduler = get_linear_schedule_with_warmup(
-    optimizer,
-    num_warmup_steps=100,
-    num_training_steps=total_steps
-)
+
+if args.use_scheduler:
+    # Learning rate scheduler setup
+    total_steps = args.epochs * args.steps_per_epoch
+    scheduler = get_linear_schedule_with_warmup(
+        optimizer,
+        num_warmup_steps=100,
+        num_training_steps=total_steps
+    )
+
+
 # Mixed precision training
 # scaler = torch.cuda.amp.GradScaler(enabled=(args.precision in ["fp16", "bf16"]))
 
@@ -298,7 +303,9 @@ for epoch in range(args.epochs):
 
         optimizer.step()
         optimizer.zero_grad()
-        scheduler.step()
+
+        if args.use_scheduler:
+            scheduler.step()
 
         losses.update(loss.item(), input_dict["images"].size(0))
         ce_losses.update(output_dict["ce_loss"].item(), input_dict["images"].size(0))
