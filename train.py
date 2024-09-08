@@ -283,7 +283,6 @@ for epoch in range(args.epochs):
 
     model.train()
     for train_idx,input_dict in enumerate(train_loader):
-        break
         print(train_idx,end='\r')
 
         input_dict = my_utils.typecasting_inputs(input_dict,args,device)
