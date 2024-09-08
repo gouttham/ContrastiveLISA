@@ -362,7 +362,7 @@ for epoch in range(args.epochs):
 
             cv2.putText(sv_image, prmpt, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 1)
             temp_name_i = str(clss.index(prmpt)) + "_" + save_name
-            image_logger[str(clss.index(prmpt))] = wandb.Image(sv_image, caption=f"{temp_name_i}")
+            image_logger[str(clss.index(prmpt))] = wandb.Image(sv_image*255, caption=f"{temp_name_i}")
             # log_exp_img.append(wandb.Image(sv_image, caption=f"{temp_name_i}"))
 
         for ech_cls in ['0','1','2','3','4']:
