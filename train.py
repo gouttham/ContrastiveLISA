@@ -316,7 +316,7 @@ for epoch in range(args.epochs):
         break
 
     print("Eval pipeline")
-    model.eval()
+    # model.eval()
     iou_dict = {}
 
     # val_loader
@@ -324,8 +324,8 @@ for epoch in range(args.epochs):
         print(val_idx, end='\r')
         input_dict = my_utils.typecasting_inputs(input_dict, args, device)
 
-        with torch.no_grad():
-            output_dict = model(**input_dict)
+        # with torch.no_grad():
+        output_dict = model(**input_dict)
 
         pred_masks = output_dict["pred_masks"]
         masks_list = output_dict["gt_masks"][0].int()
