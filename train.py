@@ -339,6 +339,7 @@ for epoch in range(args.epochs):
         output_list = (pred_masks[0] > 0).int()
 
         log_exp_img = []
+        image_logger = {}
         for mask_i, output_i, prmpt in zip(masks_list, output_list, input_dict['sampled_classes_list'][0]):
             pd = output_i.cpu().numpy().astype(np.uint8)
             gt = mask_i.cpu().numpy().astype(np.uint8)
@@ -361,7 +362,11 @@ for epoch in range(args.epochs):
 
             cv2.putText(sv_image, prmpt, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 1)
             temp_name_i = str(clss.index(prmpt)) + "_" + save_name
-            log_exp_img.append(wandb.Image(sv_image, caption=f"{temp_name_i}"))
+            image_logger[str(clss.index(prmpt))] = wandb.Image(sv_image, caption=f"{temp_name_i}")
+            # log_exp_img.append(wandb.Image(sv_image, caption=f"{temp_name_i}"))
+
+        for ech_cls in ['0','1','2','3','4']:
+            log_exp_img.append(image_logger[ech_cls])
 
         wandb.log({"visualization": log_exp_img})
 
