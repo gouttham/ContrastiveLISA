@@ -698,7 +698,7 @@ class Contrastive_CD_Dataset(torch.utils.data.Dataset):
 
         # to remove all the buildings class
         if ds == 'xbd':
-            if 0 in unique_label:
+            if len(unique_label) >1 and 0 in unique_label:
                 unique_label.remove(0)
 
         # to train with all classes
