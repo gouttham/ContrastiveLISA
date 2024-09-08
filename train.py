@@ -318,7 +318,9 @@ for epoch in range(args.epochs):
     print("Eval pipeline")
     model.eval()
     iou_dict = {}
-    for val_idx, input_dict in enumerate(val_loader):
+
+    # val_loader
+    for val_idx, input_dict in enumerate(train_loader):
         print(val_idx, end='\r')
         input_dict = my_utils.typecasting_inputs(input_dict, args, device)
 
