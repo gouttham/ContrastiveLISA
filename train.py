@@ -216,7 +216,7 @@ val_dataset = HybridDataset(
 
 val_loader = torch.utils.data.DataLoader(
             val_dataset,
-            batch_size=args.batch_size,
+            batch_size=1,
             shuffle=True,
             num_workers=args.workers,
             pin_memory=False,
@@ -320,7 +320,7 @@ for epoch in range(args.epochs):
     iou_dict = {}
 
     # val_loader
-    for val_idx, input_dict in enumerate(train_loader):
+    for val_idx, input_dict in enumerate(val_loader):
         print(val_idx, end='\r')
         input_dict = my_utils.typecasting_inputs(input_dict, args, device)
         input_dict['inference'] = True
