@@ -323,7 +323,7 @@ for epoch in range(args.epochs):
                 "train/mask_loss": mask_losses.avg,
                 "train/lr": optimizer.param_groups[0]['lr']
             })
-        break
+        # break
 
     print("Eval pipeline")
     model.eval()
