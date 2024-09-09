@@ -697,12 +697,12 @@ class Contrastive_CD_Dataset(torch.utils.data.Dataset):
             # unique_label = [0,1,2,3]
 
         # to remove all the buildings class
-        if ds == 'xbd':
-            if len(unique_label) >1 and 0 in unique_label:
-                unique_label.remove(0)
+        # if ds == 'xbd':
+        #     if len(unique_label) >1 and 0 in unique_label:
+        #         unique_label.remove(0)
 
         # to train with all classes
-        # unique_label = [0,1,2,3,4]
+        unique_label = [1,2,3,4]
 
 
         classes = [self.data2classes[ds][class_id] for class_id in unique_label]

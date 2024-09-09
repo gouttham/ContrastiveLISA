@@ -323,8 +323,8 @@ for epoch in range(args.epochs):
 
         save_name = input_dict['image_paths'][0][0].split('/')[-1]
 
-        with torch.no_grad():
-            output_dict = model(**input_dict)
+        # with torch.no_grad():
+        output_dict = model(**input_dict)
 
         pred_masks = output_dict["pred_masks"]
         masks_list = output_dict["gt_masks"][0].int()
