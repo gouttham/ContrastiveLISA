@@ -112,21 +112,8 @@ if lora_r > 0:
         cls = torch.nn.Linear
         lora_module_names = set()
         for name, module in model.named_modules():
-            if (
-                    isinstance(module, cls)
-                    and all(
-                [
-                    x not in name
-                    for x in [
-                    "visual_model",
-                    "vision_tower",
-                    "mm_projector",
-                    "text_hidden_fcs",
-                ]
-                ]
-            )
-                    and any([x in name for x in lora_target_modules])
-            ):
+            if (isinstance(module, cls) and all([x not in name for x in ["visual_model","vision_tower","mm_projector","text_hidden_fcs",]])
+                    and any([x in name for x in lora_target_modules])):
                 lora_module_names.add(name)
         return sorted(list(lora_module_names))
 
@@ -289,6 +276,7 @@ for epoch in range(args.epochs):
     model.train()
     for train_idx,input_dict in enumerate(train_loader):
         print(train_idx,end='\r')
+        optimizer.zero_grad()
 
         input_dict = my_utils.typecasting_inputs(input_dict,args,device)
 
@@ -298,11 +286,10 @@ for epoch in range(args.epochs):
         loss.backward()
 
         # Gradient clipping
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-
+        # torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
         optimizer.step()
-        optimizer.zero_grad()
+
 
         if args.use_scheduler:
             scheduler.step()
@@ -314,7 +301,7 @@ for epoch in range(args.epochs):
         mask_losses.update(output_dict["mask_loss"].item(), input_dict["images"].size(0))
 
         if train_idx % 100 ==0:
-            print("epoch : ",epoch," iter : ",train_idx," loss : ",loss.item())
+            print("epoch : ",epoch," iter : ",train_idx," loss : ",losses.avg)
             wandb.log({
                 "train/loss":losses.avg,
                 "train/ce_loss": ce_losses.avg,
@@ -327,9 +314,8 @@ for epoch in range(args.epochs):
 
     print("Eval pipeline")
     model.eval()
-    iou_dict = {}
 
-    # val_loader
+    iou_dict = {}
     for val_idx, input_dict in enumerate(val_loader):
         print(val_idx, end='\r')
         input_dict = my_utils.typecasting_inputs(input_dict, args, device)
