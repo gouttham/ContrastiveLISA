@@ -704,12 +704,10 @@ class Contrastive_CD_Dataset(torch.utils.data.Dataset):
         # to train with all classes
 
 
-        if self.val:
-            unique_label = [1, 2, 3, 4]
-        else:
-            unique_label = [1, 2, 3, 4]
-            random.shuffle(unique_label)
-            unique_label = [unique_label[-1]]
+
+        unique_label = [1, 2, 3, 4]
+        random.shuffle(unique_label)
+        # unique_label = [unique_label[-1]]
 
 
 
