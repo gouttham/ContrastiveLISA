@@ -704,6 +704,7 @@ class Contrastive_CD_Dataset(torch.utils.data.Dataset):
         # to train with all classes
         unique_label = [1,2,3,4]
         random.shuffle(unique_label)
+        unique_label = [unique_label[-1]]
 
 
         classes = [self.data2classes[ds][class_id] for class_id in unique_label]
