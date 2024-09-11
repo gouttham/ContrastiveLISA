@@ -148,6 +148,7 @@ def dict_to_cuda2(input_dict,device):
         ):
             input_dict[k] = [ele.to(device) for ele in v]
     return input_dict
+
 def typecasting_inputs(input_dict,args,device):
     input_dict = dict_to_cuda2(input_dict,device)
 
