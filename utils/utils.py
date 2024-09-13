@@ -11,15 +11,19 @@ DEFAULT_IMAGE_PATCH_TOKEN = "<im_patch>"
 DEFAULT_IM_START_TOKEN = "<im_start>"
 DEFAULT_IM_END_TOKEN = "<im_end>"
 
+# SHORT_QUESTION_LIST = [
+#     DEFAULT_IMAGE_TOKEN + "\n" + "Can you segment the {class_name} in this image?",
+#     DEFAULT_IMAGE_TOKEN + "\n" + "Please segment the {class_name} in this image.",
+#     DEFAULT_IMAGE_TOKEN
+#     + "\n"
+#     + "What is {class_name} in this image? Please respond with segmentation mask.",
+#     DEFAULT_IMAGE_TOKEN
+#     + "\n"
+#     + "What is {class_name} in this image? Please output segmentation mask.",
+# ]
+
 SHORT_QUESTION_LIST = [
-    DEFAULT_IMAGE_TOKEN + "\n" + "Can you segment the {class_name} in this image?",
-    DEFAULT_IMAGE_TOKEN + "\n" + "Please segment the {class_name} in this image.",
-    DEFAULT_IMAGE_TOKEN
-    + "\n"
-    + "What is {class_name} in this image? Please respond with segmentation mask.",
-    DEFAULT_IMAGE_TOKEN
-    + "\n"
-    + "What is {class_name} in this image? Please output segmentation mask.",
+    DEFAULT_IMAGE_TOKEN + "\n" + "Can you segment the {class_name} in this image?"
 ]
 
 LONG_QUESTION_LIST = [
@@ -34,12 +38,16 @@ EXPLANATORY_QUESTION_LIST = [
 ]
 
 ANSWER_LIST = [
-    "It is [SEG].",
-    "Sure, [SEG].",
-    "Sure, it is [SEG].",
-    "Sure, the segmentation result is [SEG].",
-    "[SEG].",
+    "It is [SEG]."
 ]
+
+# ANSWER_LIST = [
+#     "It is [SEG].",
+#     "Sure, [SEG].",
+#     "Sure, it is [SEG].",
+#     "Sure, the segmentation result is [SEG].",
+#     "[SEG].",
+# ]
 
 
 class Summary(Enum):
