@@ -266,6 +266,10 @@ clss = [
     "no building","undamaged building", "building with minor damage",
     "building with major damage", "completely destroyed building"
 ]
+
+torch.save(model.state_dict(), './new_pipeline_model/init.pth')
+0/0
+
 for epoch in range(args.epochs):
 
     losses = AverageMeter("Loss", ":.4f")
