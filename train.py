@@ -315,6 +315,7 @@ for epoch in range(args.epochs):
 
     print("Eval pipeline")
     model.eval()
+    best_iou = 0
 
     iou_dict = {}
     for val_idx, input_dict in enumerate(val_loader):
@@ -377,19 +378,12 @@ for epoch in range(args.epochs):
         cur_avg = np.average(iou_dict[ech])
         wandb_dict['val/'+ech]=cur_avg
         total_avg.append(cur_avg)
+    cur_iou = np.average(total_avg)
     wandb_dict['val/iou'] = np.average(total_avg)
     wandb.log(wandb_dict)
 
-
-
-
-
-
-
-
-
-
-
+    if cur_iou>best_iou:
+        torch.save(model.state_dict(), './new_pipeline_model/best.pth')
 
 # for epoch in range(args.epochs):
 #     for train_idx,input_dict in enumerate(train_loader):
