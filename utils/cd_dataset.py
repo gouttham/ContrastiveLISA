@@ -253,10 +253,10 @@ def init_cd_dset_xbd(base_image_dir, val=False, val_split=0.8):
 
     split_idx = int(val_split*len(image_ids))
     assert(split_idx < len(image_ids))
-    # if val:
-    #     image_ids = image_ids[split_idx:]
-    # else:
-    #     image_ids = image_ids[:split_idx]
+    if val:
+        image_ids = image_ids[split_idx:]
+    else:
+        image_ids = image_ids[:split_idx]
 
 
     xbd_image_ids_pre = []
