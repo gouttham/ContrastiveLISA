@@ -398,5 +398,11 @@ for epoch in range(args.epochs):
     wandb_dict['val/iou'] = np.average(total_avg)
     wandb.log(wandb_dict)
 
+
+    ckpt_pth = os.path.join("./new_pipeline_model",args.exp_name)
+    if not os.path.exists(ckpt_pth):
+        os.makedirs(ckpt_pth)
+        print(f"Directory '{ckpt_pth}' created.")
+
     if cur_iou>best_iou:
-        torch.save(model.state_dict(), './new_pipeline_model/best.pth')
+        torch.save(model.state_dict(), os.path.join(ckpt_pth,'best.pth'))
