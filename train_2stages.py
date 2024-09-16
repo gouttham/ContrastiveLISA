@@ -277,18 +277,18 @@ for epoch in range(args.epochs):
 
     model.train()
 
-    if epoch > 50:
-        for n, p in model.named_parameters():
-            if any([x in n for x in ["lm_head", "embed_tokens", "mask_decoder", "text_hidden_fcs", "lora_"]]):
-                print("n: ", n, "p.shape: ", p.shape)
-                p.requires_grad = True
-
-        model.cross_attn.train()
-        for param in model.cross_attn.parameters():
-            param.requires_grad = True
-
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.0001
+    # if epoch > 50:
+    #     for n, p in model.named_parameters():
+    #         if any([x in n for x in ["lm_head", "embed_tokens", "mask_decoder", "text_hidden_fcs", "lora_"]]):
+    #             print("n: ", n, "p.shape: ", p.shape)
+    #             p.requires_grad = True
+    #
+    #     model.cross_attn.train()
+    #     for param in model.cross_attn.parameters():
+    #         param.requires_grad = True
+    #
+    #     for param_group in optimizer.param_groups:
+    #         param_group['lr'] = 0.0001
 
     for train_idx,input_dict in enumerate(train_loader):
         print(train_idx,end='\r')
