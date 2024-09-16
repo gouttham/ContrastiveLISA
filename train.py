@@ -40,7 +40,7 @@ args.version="./mbin/test/LLaVA-7B-Lightening-v1-1/"
 args.constrative_dataset_dir="/localscratch/gna23/cd-datasets/"
 args.dataset_dir="/localscratch/gna23/cd-datasets/"
 args.use_scheduler = False
-args.lr = 0.0001
+args.lr = 0.0003
 
 args.num_classes_per_sample = 5
 
