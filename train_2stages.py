@@ -34,13 +34,14 @@ import torch.nn as nn
 
 args = my_utils.parse_args(sys.argv[1:])
 
-args.exp_name = "new_pipeline_dev"
+args.exp_name = "NP_S1_cls_1"
 args.const_seg_data="xbd"
 args.version="./mbin/test/LLaVA-7B-Lightening-v1-1/"
 args.constrative_dataset_dir="/localscratch/gna23/cd-datasets/"
 args.dataset_dir="/localscratch/gna23/cd-datasets/"
 args.use_scheduler = False
 args.lr = 0.001
+args.epochs = 300
 
 args.num_classes_per_sample = 5
 
@@ -157,7 +158,7 @@ train_dataset = HybridDataset(
             precision=args.precision,
             image_size=args.image_size,
             num_classes_per_sample=args.num_classes_per_sample,
-            exclude_val=True,
+            exclude_val=False,
             dataset=args.dataset,
             sample_rate=[1],
             sem_seg_data=args.sem_seg_data,
