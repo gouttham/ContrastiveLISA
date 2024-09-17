@@ -98,12 +98,7 @@ if args.constrative:
 
 print("****** Loading Pretrained weights ******")
 model.load_state_dict(torch.load("./runs/lisa-7b-xbd-14days/ckpt_model/pytorch_model.bin"),strict=False)
-new_model = torch.load("./new_pipeline_model/NP_S1_cls_1_noCELoss/best.pth")
-from collections import OrderedDict
-corrected_model = OrderedDict()
-for ech_lay in new_model:
-    corrected_model[ech_lay.replace("base_model.model.","")] = new_model[ech_lay]
-model.load_state_dict(corrected_model,strict=True)
+
 
 
 model.get_model().initialize_lisa_modules(model.get_model().config)
@@ -143,6 +138,14 @@ if lora_r > 0:
     model.print_trainable_parameters()
 
 model.resize_token_embeddings(len(tokenizer))
+
+
+new_model = torch.load("./new_pipeline_model/NP_S1_cls_1_noCELoss/best.pth")
+from collections import OrderedDict
+corrected_model = OrderedDict()
+for ech_lay in new_model:
+    corrected_model[ech_lay.replace("base_model.model.","")] = new_model[ech_lay]
+model.load_state_dict(corrected_model,strict=True)
 
 for n, p in model.named_parameters():
     if any([x in n for x in ["lm_head", "embed_tokens", "mask_decoder", "text_hidden_fcs", "lora_"]]):
