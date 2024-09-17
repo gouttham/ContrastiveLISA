@@ -364,7 +364,7 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
 
         ce_loss = model_output.loss
         ce_loss = ce_loss * self.ce_loss_weight
-        print("self.ce_loss_weight" , ce_loss , self.ce_loss_weight)
+        # print("self.ce_loss_weight" , ce_loss , self.ce_loss_weight)
         # loss = ce_loss # this is to train the language model
         mask_bce_loss = 0
         mask_dice_loss = 0
