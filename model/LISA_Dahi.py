@@ -392,8 +392,9 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         mask_dice_loss = self.dice_loss_weight * mask_dice_loss / (num_masks + 1e-8)
         mask_loss = mask_bce_loss + mask_dice_loss
 
+        print("1 : ",ce_loss)
         loss += mask_loss
-        print(ce_loss)
+        print("2 : ",ce_loss)
         return {
             "loss": loss,
             "ce_loss": ce_loss,
