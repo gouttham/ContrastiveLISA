@@ -98,7 +98,12 @@ if args.constrative:
 
 print("****** Loading Pretrained weights ******")
 model.load_state_dict(torch.load("./runs/lisa-7b-xbd-14days/ckpt_model/pytorch_model.bin"),strict=False)
-model.load_state_dict(torch.load("./new_pipeline_model/NP_S1_cls_1_noCELoss/best.pth"),strict=True)
+new_model = torch.load("./new_pipeline_model/NP_S1_cls_1_noCELoss/best.pth")
+from collections import OrderedDict
+corrected_model = OrderedDict()
+for ech_lay in new_model:
+    corrected_model[ech_lay.replace("base_model.model.","")] = new_model[ech_lay]
+model.load_state_dict(corrected_model,strict=True)
 
 
 model.get_model().initialize_lisa_modules(model.get_model().config)
