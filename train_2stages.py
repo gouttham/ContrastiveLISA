@@ -145,7 +145,7 @@ new_model = torch.load("./new_pipeline_model/NP_S1_cls_1_noCELoss/best.pth")
 # corrected_model = OrderedDict()
 # for ech_lay in new_model:
 #     corrected_model[ech_lay.replace("base_model.model.","")] = new_model[ech_lay]
-model.load_state_dict(corrected_model,strict=True)
+model.load_state_dict(new_model,strict=True)
 
 for n, p in model.named_parameters():
     if any([x in n for x in ["lm_head", "embed_tokens", "mask_decoder", "text_hidden_fcs", "lora_"]]):
