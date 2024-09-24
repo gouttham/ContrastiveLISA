@@ -325,6 +325,13 @@ for epoch in range(args.epochs):
                 "train/mask_loss": mask_losses.avg,
                 "train/lr": optimizer.param_groups[0]['lr']
             })
+            losses.reset()
+            ce_losses.reset()
+            mask_bce_losses.reset()
+            mask_dice_losses.reset()
+            mask_losses.reset()
+
+
         # break
 
     print("Eval pipeline")
