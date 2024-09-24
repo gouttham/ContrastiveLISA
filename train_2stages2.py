@@ -366,8 +366,7 @@ for epoch in range(args.epochs):
             gt = mask_i.cpu().numpy().astype(np.uint8)
 
             if len(np.unique(gt))==1 and len(np.unique(pd))==1:
-                if np.unique(gt)[0] == np.unique(pd)[0]:
-                    iou_score = 1
+                iou_score = int(np.unique(gt)[0] == np.unique(pd)[0])
             else:
                 intersection = np.logical_and(pd, gt)
                 union = np.logical_or(pd, gt)
