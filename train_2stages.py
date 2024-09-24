@@ -363,14 +363,18 @@ for epoch in range(args.epochs):
         for mask_i, output_i, prmpt in zip(masks_list, output_list, input_dict['sampled_classes_list'][0]):
             pd = output_i.cpu().numpy().astype(np.uint8)
             gt = mask_i.cpu().numpy().astype(np.uint8)
-            intersection = np.logical_and(pd, gt)
-            union = np.logical_or(pd, gt)
-            iou_score = np.sum(intersection) / np.sum(union)
-            # print("iou_score : ",iou_score)
-            iou_score = round(iou_score, 2)
-            if np.isnan(iou_score):
-                # print("Caught")
-                iou_score = 0
+
+            if len(np.unique(gt)) == 1 and len(np.unique(pd)) == 1:
+                iou_score = int(np.unique(gt)[0] == np.unique(pd)[0])
+            else:
+                intersection = np.logical_and(pd, gt)
+                union = np.logical_or(pd, gt)
+                iou_score = np.sum(intersection) / np.sum(union)
+                # print("iou_score : ",iou_score)
+                iou_score = round(iou_score, 2)
+                if np.isnan(iou_score):
+                    # print("Caught")
+                    iou_score = 0
             iou_lists = iou_dict.get(prmpt, [])
             iou_lists.append(iou_score)
             iou_dict[prmpt] = iou_lists
