@@ -35,7 +35,7 @@ import torch.nn as nn
 args = my_utils.parse_args(sys.argv[1:])
 
 # args.exp_name = "NP_S1_cls_1_noCELoss_2"
-args.exp_name = "debug"
+args.exp_name = "NP_S2_cls_1_noCELoss_2"
 args.const_seg_data="xbd"
 args.version="./mbin/test/LLaVA-7B-Lightening-v1-1/"
 args.constrative_dataset_dir="/localscratch/gna23/cd-datasets/"
@@ -142,16 +142,12 @@ model.resize_token_embeddings(len(tokenizer))
 
 
 new_model = torch.load("./new_pipeline_model/NP_S1_cls_1_noCELoss_2/best.pth")
-# from collections import OrderedDict
-# corrected_model = OrderedDict()
-# for ech_lay in new_model:
-#     corrected_model[ech_lay.replace("base_model.model.","")] = new_model[ech_lay]
 model.load_state_dict(new_model,strict=True)
 
 for n, p in model.named_parameters():
     if any([x in n for x in ["lm_head", "embed_tokens", "mask_decoder", "text_hidden_fcs", "lora_"]]):
         print("n: ", n, "p.shape: ", p.shape)
-        p.requires_grad = False
+        p.requires_grad = True
 
 model.cross_attn.train()
 for param in model.cross_attn.parameters():
@@ -281,6 +277,10 @@ clss = [
 
 for epoch in range(args.epochs):
 
+    if epoch > 75:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = 0.00001
+
     losses = AverageMeter("Loss", ":.4f")
     ce_losses = AverageMeter("CeLoss", ":.4f")
     mask_bce_losses = AverageMeter("MaskBCELoss", ":.4f")
@@ -289,56 +289,43 @@ for epoch in range(args.epochs):
 
     model.train()
 
-    # if epoch > 50:
-    #     for n, p in model.named_parameters():
-    #         if any([x in n for x in ["lm_head", "embed_tokens", "mask_decoder", "text_hidden_fcs", "lora_"]]):
-    #             print("n: ", n, "p.shape: ", p.shape)
-    #             p.requires_grad = True
-    #
-    #     model.cross_attn.train()
-    #     for param in model.cross_attn.parameters():
-    #         param.requires_grad = True
-    #
-    #     for param_group in optimizer.param_groups:
-    #         param_group['lr'] = 0.0001
+    for train_idx,input_dict in enumerate(train_loader):
+        print(train_idx,end='\r')
+        optimizer.zero_grad()
 
-    # for train_idx,input_dict in enumerate(train_loader):
-    #     print(train_idx,end='\r')
-    #     optimizer.zero_grad()
-    #
-    #     input_dict = my_utils.typecasting_inputs(input_dict,args,device)
-    #
-    #     output_dict = model(**input_dict)
-    #     loss = output_dict["loss"]
-    #
-    #     loss.backward()
-    #
-    #     # Gradient clipping
-    #     # torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-    #
-    #     optimizer.step()
-    #
-    #
-    #     if args.use_scheduler:
-    #         scheduler.step()
-    #
-    #     losses.update(loss.item(), input_dict["images"].size(0))
-    #     ce_losses.update(output_dict["ce_loss"].item(), input_dict["images"].size(0))
-    #     mask_bce_losses.update(output_dict["mask_bce_loss"].item(), input_dict["images"].size(0))
-    #     mask_dice_losses.update(output_dict["mask_dice_loss"].item(), input_dict["images"].size(0))
-    #     mask_losses.update(output_dict["mask_loss"].item(), input_dict["images"].size(0))
-    #
-    #     if train_idx % 100 ==0:
-    #         print("epoch : ",epoch," iter : ",train_idx," loss : ",losses.avg)
-    #         wandb.log({
-    #             "train/loss":losses.avg,
-    #             "train/ce_loss": ce_losses.avg,
-    #             "train/mask_bce_loss": mask_bce_losses.avg,
-    #             "train/mask_dice_loss": mask_dice_losses.avg,
-    #             "train/mask_loss": mask_losses.avg,
-    #             "train/lr": optimizer.param_groups[0]['lr']
-    #         })
-    #     # break
+        input_dict = my_utils.typecasting_inputs(input_dict,args,device)
+
+        output_dict = model(**input_dict)
+        loss = output_dict["loss"]
+
+        loss.backward()
+
+        # Gradient clipping
+        # torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+
+        optimizer.step()
+
+
+        if args.use_scheduler:
+            scheduler.step()
+
+        losses.update(loss.item(), input_dict["images"].size(0))
+        ce_losses.update(output_dict["ce_loss"].item(), input_dict["images"].size(0))
+        mask_bce_losses.update(output_dict["mask_bce_loss"].item(), input_dict["images"].size(0))
+        mask_dice_losses.update(output_dict["mask_dice_loss"].item(), input_dict["images"].size(0))
+        mask_losses.update(output_dict["mask_loss"].item(), input_dict["images"].size(0))
+
+        if train_idx % 100 ==0:
+            print("epoch : ",epoch," iter : ",train_idx," loss : ",losses.avg)
+            wandb.log({
+                "train/loss":losses.avg,
+                "train/ce_loss": ce_losses.avg,
+                "train/mask_bce_loss": mask_bce_losses.avg,
+                "train/mask_dice_loss": mask_dice_losses.avg,
+                "train/mask_loss": mask_losses.avg,
+                "train/lr": optimizer.param_groups[0]['lr']
+            })
+        # break
 
     print("Eval pipeline")
     model.eval()
