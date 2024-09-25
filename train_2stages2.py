@@ -276,7 +276,7 @@ clss = [
 ]
 
 best_iou = 0
-
+clock = 0
 for epoch in range(args.epochs):
 
     if epoch > 30:
@@ -293,6 +293,7 @@ for epoch in range(args.epochs):
 
     for train_idx,input_dict in enumerate(train_loader):
         print(train_idx,end='\r')
+        clock +=1
         optimizer.zero_grad()
 
         input_dict = my_utils.typecasting_inputs(input_dict,args,device)
@@ -325,8 +326,9 @@ for epoch in range(args.epochs):
                 "train/mask_bce_loss": mask_bce_losses.avg,
                 "train/mask_dice_loss": mask_dice_losses.avg,
                 "train/mask_loss": mask_losses.avg,
-                "train/lr": optimizer.param_groups[0]['lr']
-            })
+                "train/lr": optimizer.param_groups[0]['lr'],
+                "train/epoch": epoch
+            },step=clock)
             losses.reset()
             ce_losses.reset()
             mask_bce_losses.reset()
@@ -399,7 +401,7 @@ for epoch in range(args.epochs):
                 log_exp_img.append(wandb.Image(sv_image * 0, caption=f"{ech_cls}_fillers"))
 
 
-        wandb.log({"visualization": log_exp_img})
+        wandb.log({"visualization": log_exp_img},step=epoch)
 
 
     total_avg = []
@@ -410,7 +412,7 @@ for epoch in range(args.epochs):
         total_avg.append(cur_avg)
     cur_iou = np.average(total_avg)
     wandb_dict['val/iou'] = cur_iou
-    wandb.log(wandb_dict)
+    wandb.log(wandb_dict,step=epoch)
 
 
     ckpt_pth = os.path.join("./new_pipeline_model",args.exp_name)
