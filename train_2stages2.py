@@ -292,7 +292,6 @@ for epoch in range(args.epochs):
     model.train()
 
     for train_idx,input_dict in enumerate(train_loader):
-        break
         print(train_idx,end='\r')
         clock +=1
         optimizer.zero_grad()
@@ -347,8 +346,6 @@ for epoch in range(args.epochs):
 
     iou_dict = {}
     for val_idx, input_dict in enumerate(val_loader):
-        if val_idx>10:
-            break
         print(val_idx, end='\r')
         input_dict = my_utils.typecasting_inputs(input_dict, args, device)
         input_dict['inference'] = True
