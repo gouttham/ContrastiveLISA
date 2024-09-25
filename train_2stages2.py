@@ -339,6 +339,7 @@ for epoch in range(args.epochs):
     model.eval()
     best_iou = 0
 
+
     iou_dict = {}
     for val_idx, input_dict in enumerate(val_loader):
         print(val_idx, end='\r')
