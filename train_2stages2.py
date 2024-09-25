@@ -56,15 +56,11 @@ args.num_classes_per_sample = 5
 
 wandb = my_utils.wandb_init(args)
 
-wandb.define_metric("custom_step")
+wandb.define_metric("train/train_step")
+wandb.define_metric("train/*", step_metric="train_step")
 
-wandb.define_metric("train/loss", step_metric="custom_step")
-wandb.define_metric("train/ce_loss", step_metric="custom_step")
-wandb.define_metric("train/mask_bce_loss", step_metric="custom_step")
-wandb.define_metric("train/mask_dice_loss", step_metric="custom_step")
-wandb.define_metric("train/mask_loss", step_metric="custom_step")
-wandb.define_metric("train/lr", step_metric="custom_step")
-wandb.define_metric("train/epoch", step_metric="custom_step")
+wandb.define_metric("val/val_step")
+wandb.define_metric("val/*", step_metric="val_step")
 
 
 tokenizer = my_utils.get_tokenizer(args)
@@ -340,7 +336,7 @@ for epoch in range(args.epochs):
                 "train/mask_loss": mask_losses.avg,
                 "train/lr": optimizer.param_groups[0]['lr'],
                 "train/epoch": epoch,
-                "custom_step" : clock
+                "train/train_step" : clock
             })
             losses.reset()
             ce_losses.reset()
@@ -427,6 +423,7 @@ for epoch in range(args.epochs):
         total_avg.append(cur_avg)
     cur_iou = np.average(total_avg)
     wandb_dict['val/iou'] = cur_iou
+    wandb_dict['val/val_step']=epoch
     wandb.log(wandb_dict)
 
 
