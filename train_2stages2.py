@@ -416,7 +416,7 @@ for epoch in range(args.epochs):
     cur_iou = np.average(total_avg)
     wandb_dict['val/iou'] = cur_iou
     print("logging epoch")
-    wandb.log(wandb_dict,step=int(epoch))
+    wandb.log(wandb_dict)
 
 
     ckpt_pth = os.path.join("./new_pipeline_model",args.exp_name)
