@@ -415,7 +415,6 @@ for epoch in range(args.epochs):
         total_avg.append(cur_avg)
     cur_iou = np.average(total_avg)
     wandb_dict['val/iou'] = cur_iou
-    print("logging epoch : ",type(epoch),epoch)
     wandb.log(wandb_dict)
 
 
