@@ -56,6 +56,16 @@ args.num_classes_per_sample = 5
 
 wandb = my_utils.wandb_init(args)
 
+wandb.define_metric("custom_step")
+
+wandb.define_metric("train/loss", step_metric="custom_step")
+wandb.define_metric("train/ce_loss", step_metric="custom_step")
+wandb.define_metric("train/mask_bce_loss", step_metric="custom_step")
+wandb.define_metric("train/mask_dice_loss", step_metric="custom_step")
+wandb.define_metric("train/mask_loss", step_metric="custom_step")
+wandb.define_metric("train/lr", step_metric="custom_step")
+wandb.define_metric("train/epoch", step_metric="custom_step")
+
 
 tokenizer = my_utils.get_tokenizer(args)
 
@@ -293,6 +303,8 @@ for epoch in range(args.epochs):
 
     for train_idx,input_dict in enumerate(train_loader):
         print(train_idx,end='\r')
+        if train_idx>10:
+            break
         clock +=1
         optimizer.zero_grad()
 
@@ -318,7 +330,7 @@ for epoch in range(args.epochs):
         mask_dice_losses.update(output_dict["mask_dice_loss"].item(), input_dict["images"].size(0))
         mask_losses.update(output_dict["mask_loss"].item(), input_dict["images"].size(0))
 
-        if train_idx % 100 ==0:
+        if train_idx % 1 ==0:
             print("epoch : ",epoch," iter : ",train_idx," loss : ",losses.avg)
             wandb.log({
                 "train/loss":losses.avg,
@@ -327,8 +339,9 @@ for epoch in range(args.epochs):
                 "train/mask_dice_loss": mask_dice_losses.avg,
                 "train/mask_loss": mask_losses.avg,
                 "train/lr": optimizer.param_groups[0]['lr'],
-                "train/epoch": epoch
-            },step=clock)
+                "train/epoch": epoch,
+                "custom_step" : clock
+            })
             losses.reset()
             ce_losses.reset()
             mask_bce_losses.reset()
@@ -346,6 +359,8 @@ for epoch in range(args.epochs):
 
     iou_dict = {}
     for val_idx, input_dict in enumerate(val_loader):
+        if val_idx>10:
+            break
         print(val_idx, end='\r')
         input_dict = my_utils.typecasting_inputs(input_dict, args, device)
         input_dict['inference'] = True
