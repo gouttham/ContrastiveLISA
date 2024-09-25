@@ -281,6 +281,7 @@ clss = [
     "building with major damage", "completely destroyed building"
 ]
 
+optimizer.zero_grad()
 best_iou = 0
 clock = 0
 for epoch in range(args.epochs):
@@ -299,10 +300,10 @@ for epoch in range(args.epochs):
 
     for train_idx,input_dict in enumerate(train_loader):
         print(train_idx,end='\r')
-        if train_idx>10:
-            break
+        # if train_idx>10:
+            # break
         clock +=1
-        optimizer.zero_grad()
+
 
         input_dict = my_utils.typecasting_inputs(input_dict,args,device)
 
@@ -315,6 +316,7 @@ for epoch in range(args.epochs):
         # torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
         optimizer.step()
+        optimizer.zero_grad()
 
 
         if args.use_scheduler:
@@ -326,7 +328,7 @@ for epoch in range(args.epochs):
         mask_dice_losses.update(output_dict["mask_dice_loss"].item(), input_dict["images"].size(0))
         mask_losses.update(output_dict["mask_loss"].item(), input_dict["images"].size(0))
 
-        if train_idx % 1 ==0:
+        if train_idx % 100 ==0:
             print("epoch : ",epoch," iter : ",train_idx," loss : ",losses.avg)
             wandb.log({
                 "train/loss":losses.avg,
@@ -355,8 +357,8 @@ for epoch in range(args.epochs):
 
     iou_dict = {}
     for val_idx, input_dict in enumerate(val_loader):
-        if val_idx>10:
-            break
+        # if val_idx>10:
+        #     break
         print(val_idx, end='\r')
         input_dict = my_utils.typecasting_inputs(input_dict, args, device)
         input_dict['inference'] = True
