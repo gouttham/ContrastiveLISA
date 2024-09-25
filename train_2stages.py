@@ -278,6 +278,8 @@ clss = [
     "building with major damage", "completely destroyed building"
 ]
 
+best_iou = 0
+
 for epoch in range(args.epochs):
 
     losses = AverageMeter("Loss", ":.4f")
@@ -345,8 +347,9 @@ for epoch in range(args.epochs):
         # break
 
     print("Eval pipeline")
+    torch.cuda.empty_cache()
     model.eval()
-    best_iou = 0
+
 
     iou_dict = {}
     for val_idx, input_dict in enumerate(val_loader):
@@ -356,8 +359,8 @@ for epoch in range(args.epochs):
 
         save_name = input_dict['image_paths'][0][0].split('/')[-1]
 
-        # with torch.no_grad():
-        output_dict = model(**input_dict)
+        with torch.no_grad():
+            output_dict = model(**input_dict)
 
         pred_masks = output_dict["pred_masks"]
         masks_list = output_dict["gt_masks"][0].int()
@@ -425,4 +428,5 @@ for epoch in range(args.epochs):
         print(f"Directory '{ckpt_pth}' created.")
 
     if cur_iou>best_iou:
-        torch.save(model.state_dict(), os.path.join(ckpt_pth,'best.pth'))
+        torch.save(model.state_dict(), os.path.join(ckpt_pth,'{}_{}.pth'.format(epoch,round(cur_iou,4))))
+        best_iou = cur_iou

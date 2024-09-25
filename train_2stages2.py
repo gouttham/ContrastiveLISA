@@ -275,6 +275,8 @@ clss = [
     "building with major damage", "completely destroyed building"
 ]
 
+best_iou = 0
+
 for epoch in range(args.epochs):
 
     if epoch > 30:
@@ -337,7 +339,7 @@ for epoch in range(args.epochs):
     print("Eval pipeline")
     torch.cuda.empty_cache()
     model.eval()
-    best_iou = 0
+
 
 
     iou_dict = {}
@@ -407,7 +409,7 @@ for epoch in range(args.epochs):
         wandb_dict['val/'+ech]=cur_avg
         total_avg.append(cur_avg)
     cur_iou = np.average(total_avg)
-    wandb_dict['val/iou'] = np.average(total_avg)
+    wandb_dict['val/iou'] = cur_iou
     wandb.log(wandb_dict)
 
 
@@ -417,4 +419,5 @@ for epoch in range(args.epochs):
         print(f"Directory '{ckpt_pth}' created.")
 
     if cur_iou>best_iou:
-        torch.save(model.state_dict(), os.path.join(ckpt_pth,'best.pth'))
+        torch.save(model.state_dict(), os.path.join(ckpt_pth,'{}_{}.pth'.format(epoch,round(cur_iou,4))))
+        best_iou = cur_iou
