@@ -705,10 +705,10 @@ class Contrastive_CD_Dataset(torch.utils.data.Dataset):
 
 
 
-        unique_label = [0, 1, 2, 3, 4]
+        # unique_label = [0, 1, 2, 3, 4]
         random.shuffle(unique_label)
-        # unique_label = [1]
-        # unique_label = [unique_label[-1]]
+
+
 
 
 
