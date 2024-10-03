@@ -49,7 +49,7 @@ args.ce_loss_weight = 0.0
 # args.batch_size = 2
 
 args.num_classes_per_sample = 1
-args.batch_size = 10
+args.batch_size = 5
 
 # args.local_rank = "cpu"
 # args.version = "mmaaz60/LLaVA-7B-Lightening-v1-1"
@@ -304,8 +304,8 @@ for epoch in range(args.epochs):
 
     for train_idx,input_dict in enumerate(train_loader):
         print(train_idx,end='\r')
-        if train_idx>10:
-            break
+        # if train_idx>10:
+            # break
         clock +=1
 
 
