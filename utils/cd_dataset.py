@@ -683,9 +683,14 @@ class Contrastive_CD_Dataset(torch.utils.data.Dataset):
             label = np.array(label)
         
         unique_label = np.unique(label).tolist()
+
         if 255 in unique_label:
             unique_label.remove(255)
+
         if len(unique_label) == 0:
+            return self.__getitem__(0)
+
+        if len(unique_label) == 1 and unique_label[0]==0:
             return self.__getitem__(0)
 
         # if ds == 'xbd':
