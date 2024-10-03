@@ -718,6 +718,10 @@ class Contrastive_CD_Dataset(torch.utils.data.Dataset):
 
 
         classes = [self.data2classes[ds][class_id] for class_id in unique_label]
+
+        classes = [cls for cls in classes if cls != 0] # to remove classes
+
+
         if len(classes) >= self.num_classes_per_sample:
             sampled_classes = np.random.choice(
                 classes, size=self.num_classes_per_sample, replace=False
