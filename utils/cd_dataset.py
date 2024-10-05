@@ -254,9 +254,11 @@ def init_cd_dset_xbd(base_image_dir, val=False, val_split=0.8):
     split_idx = int(val_split*len(image_ids))
     assert(split_idx < len(image_ids))
     if val:
-        image_ids = image_ids[split_idx:]
+        # image_ids = image_ids[split_idx:]
+        image_ids = [i for i in image_ids if 'z_test' in i]
     else:
-        image_ids = image_ids[:split_idx]
+        image_ids = [i for i in image_ids if 'z_test' not in i]
+        # image_ids = image_ids[:split_idx]
 
 
     xbd_image_ids_pre = []
@@ -688,10 +690,10 @@ class Contrastive_CD_Dataset(torch.utils.data.Dataset):
             unique_label.remove(255)
 
         if len(unique_label) == 0:
-            return self.__getitem__(0)
+            return self.__getitem__(random.randint(0,len(self.idx_selector_map)))
 
         if len(unique_label) == 1 and unique_label[0]==0:
-            return self.__getitem__(0)
+            return self.__getitem__(random.randint(0,len(self.idx_selector_map)))
 
         # if ds == 'xbd':
         #     if 4 in unique_label:
