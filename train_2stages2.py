@@ -48,7 +48,7 @@ args.ce_loss_weight = 0.0
 # args.num_classes_per_sample = 5
 # args.batch_size = 2
 
-args.num_classes_per_sample = 1
+args.num_classes_per_sample = 5
 args.batch_size = 5
 
 # args.local_rank = "cpu"
