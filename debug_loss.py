@@ -11,7 +11,7 @@ import tqdm
 
 from peft import LoraConfig, get_peft_model
 
-from model.LISA_Dahi import LISAForCausalLM
+from model.LISA_Dahi2 import LISAForCausalLM
 from model.llava import conversation as conversation_lib
 from utils.dataset import HybridDataset, ValDataset, collate_fn,collate_fn3
 from utils.utils import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
