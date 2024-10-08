@@ -295,10 +295,6 @@ for epoch in range(args.epochs):
             param_group['lr'] = 0.00001
 
     losses = AverageMeter("Loss", ":.4f")
-    ce_losses = AverageMeter("CeLoss", ":.4f")
-    mask_bce_losses = AverageMeter("MaskBCELoss", ":.4f")
-    mask_dice_losses = AverageMeter("MaskDICELoss", ":.4f")
-    mask_losses = AverageMeter("MaskLoss", ":.4f")
 
     model.train()
 
@@ -327,29 +323,16 @@ for epoch in range(args.epochs):
             scheduler.step()
 
         losses.update(loss.item(), input_dict["images"].size(0))
-        ce_losses.update(output_dict["ce_loss"].item(), input_dict["images"].size(0))
-        mask_bce_losses.update(output_dict["mask_bce_loss"].item(), input_dict["images"].size(0))
-        mask_dice_losses.update(output_dict["mask_dice_loss"].item(), input_dict["images"].size(0))
-        mask_losses.update(output_dict["mask_loss"].item(), input_dict["images"].size(0))
 
         if train_idx % 100 ==0:
             print("epoch : ",epoch," iter : ",train_idx," loss : ",losses.avg)
             wandb.log({
                 "train/loss":losses.avg,
-                "train/ce_loss": ce_losses.avg,
-                "train/mask_bce_loss": mask_bce_losses.avg,
-                "train/mask_dice_loss": mask_dice_losses.avg,
-                "train/mask_loss": mask_losses.avg,
                 "train/lr": optimizer.param_groups[0]['lr'],
                 "train/epoch": epoch,
                 "train/train_step" : clock
             })
             losses.reset()
-            ce_losses.reset()
-            mask_bce_losses.reset()
-            mask_dice_losses.reset()
-            mask_losses.reset()
-
 
         # break
 

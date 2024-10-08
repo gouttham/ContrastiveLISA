@@ -368,9 +368,10 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         ce_loss = ce_loss * self.ce_loss_weight
         # print("self.ce_loss_weight" , ce_loss , self.ce_loss_weight)
         # loss = ce_loss # this is to train the language model
-        mask_bce_loss = 0
-        mask_dice_loss = 0
+
+
         num_masks = 0
+        cr_loss = 0
 
         ctgry = []
         for batch_idx in range(len(pred_masks)):
@@ -398,40 +399,15 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
             gt_mask = gt_masks[batch_idx]
             pred_mask = pred_masks[batch_idx]
             cct = ctgry[batch_idx]
+            weight_dict = [0.05, 0.2, 0.8, 0.7, 0.4]
+            cr_loss += self.seg_loss(pred_mask,gt_mask) * weight_dict[cct]
+            num_masks += 1
 
-            print("Debugging")
+        loss = cr_loss / (num_masks + 1e-8)
 
 
-
-
-
-            assert (
-                gt_mask.shape[0] == pred_mask.shape[0]
-            ), "gt_mask.shape: {}, pred_mask.shape: {}".format(
-                gt_mask.shape, pred_mask.shape
-            )
-            mask_bce_loss += (
-                sigmoid_ce_loss(pred_mask, gt_mask, num_masks=gt_mask.shape[0])
-                * gt_mask.shape[0]
-            )
-            mask_dice_loss += (
-                dice_loss(pred_mask, gt_mask, num_masks=gt_mask.shape[0])
-                * gt_mask.shape[0]
-            )
-            num_masks += gt_mask.shape[0]
-
-        mask_bce_loss = self.bce_loss_weight * mask_bce_loss / (num_masks + 1e-8)
-        mask_dice_loss = self.dice_loss_weight * mask_dice_loss / (num_masks + 1e-8)
-        mask_loss = mask_bce_loss + mask_dice_loss
-
-        # loss += mask_loss
-        loss = ce_loss + mask_loss
         return {
             "loss": loss,
-            "ce_loss": ce_loss,
-            "mask_bce_loss": mask_bce_loss,
-            "mask_dice_loss": mask_dice_loss,
-            "mask_loss": mask_loss,
         }
 
     # def evaluate(
