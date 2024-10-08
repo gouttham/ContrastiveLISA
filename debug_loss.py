@@ -35,7 +35,7 @@ import torch.nn as nn
 args = my_utils.parse_args(sys.argv[1:])
 
 # args.exp_name = "NP_S1_cls_1_noCELoss_2"
-args.exp_name = "NP_S2_cls_1_noCELoss_4"
+args.exp_name = "debugging"
 args.const_seg_data="xbd"
 args.version="./mbin/test/LLaVA-7B-Lightening-v1-1/"
 args.constrative_dataset_dir="/localscratch/gna23/cd-datasets/"
