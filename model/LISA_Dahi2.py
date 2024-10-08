@@ -107,6 +107,38 @@ class LisaMetaModel:
             param.requires_grad = True
 
 
+def replace_repeats_with_missing(lst, classes):
+    # Count occurrences of each number in the list
+    occurrences = {num: lst.count(num) for num in lst}
+
+    # Find repeated numbers
+    repeated_numbers = [num for num, count in occurrences.items() if count > 1]
+
+    # Find numbers from the class set that are missing in the list
+    missing_numbers = [num for num in classes if num not in lst]
+
+    # Replace repeated numbers with missing numbers
+    result = lst[:]
+    missing_idx = 0  # Index to track the current missing number to replace with
+
+    for i in range(len(result)):
+        if result[i] in repeated_numbers and missing_idx < len(missing_numbers):
+            result[i] = missing_numbers[missing_idx]
+            missing_idx += 1
+
+    return result
+
+
+def has_repeated_numbers(lst):
+    # Count occurrences of each number
+    occurrences = {num: lst.count(num) for num in lst}
+
+    # Check if any number appears more than once
+    for count in occurrences.values():
+        if count > 1:
+            return True
+    return False
+
 class LisaModel(LisaMetaModel, LlavaLlamaModel):
     def __init__(
         self,
@@ -401,6 +433,12 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
                     m_ctgry.append(4)
             ctgry.append(m_ctgry)
 
+        processed = []
+        for ech in ctgry:
+            if has_repeated_numbers(ech):
+                ech = replace_repeats_with_missing(ech,[0,1,2,3,4])
+            processed.append(ech)
+        ctgry = processed
 
         for batch_idx in range(len(pred_masks)):
             gt_mask = gt_masks[batch_idx]
