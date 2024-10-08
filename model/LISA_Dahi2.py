@@ -17,7 +17,7 @@ from .attention_utils_dahi import cross_attention
 
 import numpy as np
 import pdb
-from losses import ComboLoss
+from .losses import ComboLoss
 
 def dice_loss(
     inputs: torch.Tensor,
