@@ -375,33 +375,48 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
 
         ctgry = []
         for batch_idx in range(len(pred_masks)):
-            gt_mask = gt_masks[batch_idx].squeeze()
+            gt_mask = gt_masks[batch_idx]
             cur_lbl = label_list[batch_idx]
+
+
             c_0 = (cur_lbl == 0).int()
             c_1 = (cur_lbl == 1).int()
             c_2 = (cur_lbl == 2).int()
             c_3 = (cur_lbl == 3).int()
             c_4 = (cur_lbl == 4).int()
 
-            if torch.equal(gt_mask, c_0):
-                ctgry.append(0)
-            elif torch.equal(gt_mask, c_1):
-                ctgry.append(1)
-            elif torch.equal(gt_mask, c_2):
-                ctgry.append(2)
-            elif torch.equal(gt_mask, c_3):
-                ctgry.append(3)
-            elif torch.equal(gt_mask, c_4):
-                ctgry.append(4)
+            mini_idx,_,_ = gt_mask.shape
+
+            m_ctgry = []
+            for m_idx in range(mini_idx):
+                if torch.equal(gt_mask[m_idx], c_0):
+                    m_ctgry.append(0)
+                elif torch.equal(gt_mask[m_idx], c_1):
+                    m_ctgry.append(1)
+                elif torch.equal(gt_mask[m_idx], c_2):
+                    m_ctgry.append(2)
+                elif torch.equal(gt_mask[m_idx], c_3):
+                    m_ctgry.append(3)
+                elif torch.equal(gt_mask[m_idx], c_4):
+                    m_ctgry.append(4)
+            ctgry.append(m_ctgry)
 
 
         for batch_idx in range(len(pred_masks)):
             gt_mask = gt_masks[batch_idx]
             pred_mask = pred_masks[batch_idx]
             cct = ctgry[batch_idx]
-            weight_dict = [0.05, 0.2, 0.8, 0.7, 0.4]
-            cr_loss += self.seg_loss(pred_mask,gt_mask) * weight_dict[cct]
-            num_masks += 1
+
+            mini_idx, _, _ = gt_mask.shape
+
+            for m_idx in range(mini_idx):
+                ech_gt_mask = gt_mask[m_idx]
+                ech_pred_mask = pred_mask[m_idx]
+                ech_cct = cct[m_idx]
+                # ['no building', 'undamaged building', 'minor','heavy', 'destroyed']
+                weight_dict = [0.05, 0.2, 0.8, 0.7, 0.4]
+                cr_loss += self.seg_loss(ech_pred_mask,ech_gt_mask) * weight_dict[ech_cct]
+                num_masks += 1
 
         loss = cr_loss / (num_masks + 1e-8)
 
