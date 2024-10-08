@@ -630,7 +630,11 @@ class Contrastive_CD_Dataset(torch.utils.data.Dataset):
         #     ds_idx = random.randint(0, len(self.sem_seg_datas) - 1)
         #     ds = self.sem_seg_datas[ds_idx]
 
-        ds, idx = self.idx_selector_map[idx]
+        try:
+            ds, idx = self.idx_selector_map[idx]
+        except:
+            idx = idx-1
+            ds, idx = self.idx_selector_map[idx]
 
 
         pre_images, post_images, labels = self.data2list[ds]
