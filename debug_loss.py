@@ -45,11 +45,11 @@ args.lr = 0.0001
 args.epochs = 300
 args.ce_loss_weight = 0.0
 
-# args.num_classes_per_sample = 5
-# args.batch_size = 2
+args.num_classes_per_sample = 5
+args.batch_size = 2
 
-args.num_classes_per_sample = 1
-args.batch_size = 5
+# args.num_classes_per_sample = 1
+# args.batch_size = 5
 
 # args.local_rank = "cpu"
 # args.version = "mmaaz60/LLaVA-7B-Lightening-v1-1"
