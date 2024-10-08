@@ -257,7 +257,8 @@ def init_cd_dset_xbd(base_image_dir, val=False, val_split=0.8):
         # image_ids = image_ids[split_idx:]
         image_ids = [i for i in image_ids if 'z_test' in i]
     else:
-        image_ids = [i for i in image_ids if 'z_test' not in i]
+        image_ids = [i for i in image_ids]
+        # image_ids = [i for i in image_ids if 'z_test' not in i]
         # image_ids = image_ids[:split_idx]
 
 
