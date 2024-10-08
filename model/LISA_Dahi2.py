@@ -17,6 +17,7 @@ from .attention_utils_dahi import cross_attention
 
 import numpy as np
 import pdb
+from losses import ComboLoss
 
 def dice_loss(
     inputs: torch.Tensor,
@@ -160,6 +161,7 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         #     print("*********************** NO Constrative ***********************")
 
         try:
+            seg_loss = ComboLoss({'dice': 1, 'focal': 8}, per_image=False)
             self.constrative = kwargs.pop("constrative")
             self.cross_attn = cross_attention()
             
@@ -370,13 +372,38 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         mask_dice_loss = 0
         num_masks = 0
 
-        # for batch_idx in range(len(pred_masks)):
-        #     gt_mask = gt_masks[batch_idx]
-        #
-        #     ctgry =
+        ctgry = []
+        for batch_idx in range(len(pred_masks)):
+            gt_mask = gt_masks[batch_idx].squeeze()
+            cur_lbl = label_list[batch_idx]
+            c_0 = (cur_lbl == 0).int()
+            c_1 = (cur_lbl == 1).int()
+            c_2 = (cur_lbl == 2).int()
+            c_3 = (cur_lbl == 3).int()
+            c_4 = (cur_lbl == 4).int()
+
+            if torch.equal(gt_mask, c_0):
+                ctgry.append(0)
+            elif torch.equal(gt_mask, c_1):
+                ctgry.append(1)
+            elif torch.equal(gt_mask, c_2):
+                ctgry.append(2)
+            elif torch.equal(gt_mask, c_3):
+                ctgry.append(3)
+            elif torch.equal(gt_mask, c_4):
+                ctgry.append(4)
+
+
         for batch_idx in range(len(pred_masks)):
             gt_mask = gt_masks[batch_idx]
             pred_mask = pred_masks[batch_idx]
+            cct = ctgry[batch_idx]
+
+            print("Debugging")
+
+
+
+
 
             assert (
                 gt_mask.shape[0] == pred_mask.shape[0]
