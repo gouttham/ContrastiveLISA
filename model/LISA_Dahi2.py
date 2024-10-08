@@ -161,7 +161,7 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         #     print("*********************** NO Constrative ***********************")
 
         try:
-            seg_loss = ComboLoss({'dice': 1, 'focal': 8}, per_image=False)
+            self.seg_loss = ComboLoss({'dice': 1, 'focal': 8}, per_image=False)
             self.constrative = kwargs.pop("constrative")
             self.cross_attn = cross_attention()
             
