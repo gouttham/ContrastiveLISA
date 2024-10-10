@@ -11,7 +11,7 @@ import tqdm
 
 from peft import LoraConfig, get_peft_model
 
-from model.LISA_Dahi import LISAForCausalLM
+from model.LISA_Dahi3 import LISAForCausalLM
 from model.llava import conversation as conversation_lib
 from utils.dataset import HybridDataset, ValDataset, collate_fn,collate_fn3
 from utils.utils import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
@@ -45,11 +45,13 @@ args.lr = 0.0001
 args.epochs = 300
 args.ce_loss_weight = 0.0
 
-# args.num_classes_per_sample = 5
-# args.batch_size = 2
-
-args.num_classes_per_sample = 1
+args.num_classes_per_sample = 5
 args.batch_size = 2
+
+args.lora_r = 16
+
+# args.num_classes_per_sample = 1
+# args.batch_size = 2
 
 # args.local_rank = "cpu"
 # args.version = "mmaaz60/LLaVA-7B-Lightening-v1-1"
@@ -120,6 +122,7 @@ for p in model.get_model().mm_projector.parameters():
     p.requires_grad = False
 
 conversation_lib.default_conversation = conversation_lib.conv_templates[args.conv_type]
+
 
 lora_r = args.lora_r
 if lora_r > 0:
