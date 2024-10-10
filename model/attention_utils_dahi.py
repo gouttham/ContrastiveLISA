@@ -308,6 +308,13 @@ class CrossAttention_new(nn.Module):
         nn.init.zeros_(self.multihead_attn.in_proj_bias)
         nn.init.zeros_(self.multihead_attn.out_proj.bias)
 
+        # Initialize convolutional layer weights for gating mechanism using Kaiming initialization
+        for layer in self.gate:
+            if isinstance(layer, nn.Conv2d):
+                nn.init.kaiming_normal_(layer.weight, mode='fan_in', nonlinearity='sigmoid')  # Kaiming init for Conv2d
+                if layer.bias is not None:
+                    nn.init.zeros_(layer.bias)  # Set bias to 0 for Conv2d
+
     def forward(self, image_embeddings1, image_embeddings2):
         # Reshape the input to (batch_size, seq_len, embed_dim)
         b, c, h, w = image_embeddings1.shape
