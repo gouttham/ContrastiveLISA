@@ -163,7 +163,7 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         try:
             self.constrative = kwargs.pop("constrative")
             # self.cross_attn = CrossAttention_new(embed_dim=256,num_heads=8)
-            self.cross_attn = BASE_Transformer(input_nc=256,output_nc=256,with_pos=False)
+            self.cross_attn = BASE_Transformer(input_nc=256,output_nc=256,with_pos='learned')
             # self.cross_attn = cross_attention()
             
         except:
