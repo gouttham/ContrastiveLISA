@@ -316,7 +316,9 @@ class CrossAttention_new(nn.Module):
         attn_output = self.proj(attn_output)
         attn_output = attn_output.permute(1, 2, 0).view(b, c, h, w)  # Back to (batch, channels, height, width)
 
-        return attn_output
+        output = image_embeddings2 + attn_output
+
+        return output
 
 class cross_attention(torch.nn.Module):
     def __init__(self):
