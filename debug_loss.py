@@ -152,8 +152,8 @@ if lora_r > 0:
 model.resize_token_embeddings(len(tokenizer))
 
 
-new_model = torch.load("./new_pipeline_model/NP_S1_cls_1_noCELoss_2/best.pth")
-model.load_state_dict(new_model,strict=True)
+# new_model = torch.load("./new_pipeline_model/NP_S1_cls_1_noCELoss_2/best.pth")
+# model.load_state_dict(new_model,strict=True)
 
 for n, p in model.named_parameters():
     if any([x in n for x in ["lm_head", "embed_tokens", "mask_decoder", "text_hidden_fcs", "lora_"]]):
