@@ -291,9 +291,9 @@ best_iou = 0
 clock = 0
 for epoch in range(args.epochs):
 
-    if epoch > 30:
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = 0.00001
+    # if epoch > 30:
+    #     for param_group in optimizer.param_groups:
+    #         param_group['lr'] = 0.00001
 
     losses = AverageMeter("Loss", ":.4f")
 
