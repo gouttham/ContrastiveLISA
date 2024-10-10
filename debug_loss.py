@@ -118,6 +118,11 @@ if args.constrative:
             elif isinstance(m, nn.LayerNorm) or isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Parameter):
+                for name, param in m.named_parameters():
+                    if 'pos_embedding' in name or 'pos_embedding_decoder' in name:
+                        nn.init.xavier_uniform_(param)
+
 
     initialize_weights(model)
     model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
