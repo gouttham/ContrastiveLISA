@@ -202,24 +202,25 @@ train_loader = torch.utils.data.DataLoader(
 
         )
 
-val_dataset = HybridDataset(
-            args.constrative_dataset_dir,
-            tokenizer,
-            args.vision_tower,
-            samples_per_epoch=1200,
-            precision=args.precision,
-            image_size=args.image_size,
-            num_classes_per_sample=5,
-            exclude_val=True,
-            dataset=args.dataset,
-            sample_rate=[1],
-            sem_seg_data=args.sem_seg_data,
-            refer_seg_data=args.refer_seg_data,
-            vqa_data=args.vqa_data,
-            reason_seg_data=args.reason_seg_data,
-            explanatory=args.explanatory,
-            const_seg_data = args.const_seg_data
-        )
+val_dataset = train_dataset
+# val_dataset = HybridDataset(
+#             args.constrative_dataset_dir,
+#             tokenizer,
+#             args.vision_tower,
+#             samples_per_epoch=1200,
+#             precision=args.precision,
+#             image_size=args.image_size,
+#             num_classes_per_sample=5,
+#             exclude_val=True,
+#             dataset=args.dataset,
+#             sample_rate=[1],
+#             sem_seg_data=args.sem_seg_data,
+#             refer_seg_data=args.refer_seg_data,
+#             vqa_data=args.vqa_data,
+#             reason_seg_data=args.reason_seg_data,
+#             explanatory=args.explanatory,
+#             const_seg_data = args.const_seg_data
+#         )
 
 val_loader = torch.utils.data.DataLoader(
             val_dataset,
