@@ -161,8 +161,8 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
 
         try:
             self.constrative = kwargs.pop("constrative")
-            self.cross_attn = CrossAttention_new()
-            # self.cross_attn = cross_attention()
+            # self.cross_attn = CrossAttention_new(num_heads=8)
+            self.cross_attn = cross_attention()
             
         except:
             print("No Constrative")
