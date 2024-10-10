@@ -283,6 +283,29 @@ class TransformerDecoder(nn.Module):
         return x
 
 
+class CrossAttention_new(nn.Module):
+    def __init__(self, embed_dim, num_heads):
+        super(CrossAttention_new, self).__init__()
+        # Use multi-head attention to capture the differences between two sets of embeddings
+        self.multihead_attn = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads)
+        # Linear layer to project the output of attention
+        self.proj = nn.Linear(embed_dim, embed_dim)
+
+    def forward(self, image_embeddings1, image_embeddings2):
+        # Reshape the input to (batch_size, seq_len, embed_dim)
+        b, c, h, w = image_embeddings1.shape
+        image_embeddings1 = image_embeddings1.view(b, c, -1).permute(2, 0, 1)  # (seq_len, batch, embed_dim)
+        image_embeddings2 = image_embeddings2.view(b, c, -1).permute(2, 0, 1)
+
+        # Perform cross-attention: image_embeddings1 attends to image_embeddings2
+        attn_output, _ = self.multihead_attn(image_embeddings1, image_embeddings2, image_embeddings2)
+
+        # Project the attention output and reshape back
+        attn_output = self.proj(attn_output)
+        attn_output = attn_output.permute(1, 2, 0).view(b, c, h, w)  # Back to (batch, channels, height, width)
+
+        return attn_output
+
 class cross_attention(torch.nn.Module):
     def __init__(self):
         super(cross_attention, self).__init__()
