@@ -295,6 +295,7 @@ class CrossAttention_new(nn.Module):
             nn.Conv2d(embed_dim, embed_dim, kernel_size=1),
             nn.Sigmoid()  # Gate between 0 and 1
         )
+        self._reset_parameters()
 
     def _reset_parameters(self):
         # Initialize Linear and Multi-head Attention weights using Xavier initialization
