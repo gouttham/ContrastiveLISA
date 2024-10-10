@@ -291,6 +291,11 @@ class CrossAttention_new(nn.Module):
         # Linear layer to project the output of attention
         self.proj = nn.Linear(embed_dim, embed_dim)
 
+        self.gate = nn.Sequential(
+            nn.Conv2d(embed_dim, embed_dim, kernel_size=1),
+            nn.Sigmoid()  # Gate between 0 and 1
+        )
+
     def _reset_parameters(self):
         # Initialize Linear and Multi-head Attention weights using Xavier initialization
         nn.init.xavier_uniform_(self.proj.weight)
@@ -316,7 +321,10 @@ class CrossAttention_new(nn.Module):
         attn_output = self.proj(attn_output)
         attn_output = attn_output.permute(1, 2, 0).view(b, c, h, w)  # Back to (batch, channels, height, width)
 
-        output = image_embeddings2 + attn_output
+        # output = image_embeddings2 + attn_output
+
+        gate = self.gate(image_embeddings2)
+        output = gate * attn_output + (1 - gate) * image_embeddings2
 
         return output
 
