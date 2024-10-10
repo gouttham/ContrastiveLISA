@@ -11,7 +11,7 @@ import tqdm
 
 from peft import LoraConfig, get_peft_model
 
-from model.LISA_Dahi2 import LISAForCausalLM
+from model.LISA_Dahi import LISAForCausalLM
 from model.llava import conversation as conversation_lib
 from utils.dataset import HybridDataset, ValDataset, collate_fn,collate_fn3
 from utils.utils import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
@@ -38,7 +38,7 @@ args = my_utils.parse_args(sys.argv[1:])
 args.exp_name = "debugging"
 args.const_seg_data="xbd"
 args.version="./mbin/test/LLaVA-7B-Lightening-v1-1/"
-args.constrative_dataset_dir="/localscratch/gna23/cd-datasets/"
+args.constrative_dataset_dir="/localscratch/gna23/overfit/"
 args.dataset_dir="/localscratch/gna23/cd-datasets/"
 args.use_scheduler = False
 args.lr = 0.0001
