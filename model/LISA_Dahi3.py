@@ -12,7 +12,8 @@ from .llava.model.language_model.llava_llama import (LlavaLlamaForCausalLM,
                                                      LlavaLlamaModel)
 from .segment_anything import build_sam_vit_h
 import pickle as pk
-from .attention_utils_dahi import cross_attention,CrossAttention_new
+# from .attention_utils_dahi import cross_attention,CrossAttention_new
+from .attention_utils import  BASE_Transformer
 # from .models_bit import networks
 
 import numpy as np
@@ -161,7 +162,8 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
 
         try:
             self.constrative = kwargs.pop("constrative")
-            self.cross_attn = CrossAttention_new(embed_dim=256,num_heads=8)
+            # self.cross_attn = CrossAttention_new(embed_dim=256,num_heads=8)
+            self.cross_attn = BASE_Transformer(input_nc=256,output_nc=256,with_pos=False)
             # self.cross_attn = cross_attention()
             
         except:
