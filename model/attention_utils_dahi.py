@@ -291,6 +291,18 @@ class CrossAttention_new(nn.Module):
         # Linear layer to project the output of attention
         self.proj = nn.Linear(embed_dim, embed_dim)
 
+    def _reset_parameters(self):
+        # Initialize Linear and Multi-head Attention weights using Xavier initialization
+        nn.init.xavier_uniform_(self.proj.weight)
+        nn.init.xavier_uniform_(self.multihead_attn.in_proj_weight)
+        nn.init.xavier_uniform_(self.multihead_attn.out_proj.weight)
+
+        # Initialize biases
+        if self.proj.bias is not None:
+            nn.init.zeros_(self.proj.bias)
+        nn.init.zeros_(self.multihead_attn.in_proj_bias)
+        nn.init.zeros_(self.multihead_attn.out_proj.bias)
+
     def forward(self, image_embeddings1, image_embeddings2):
         # Reshape the input to (batch_size, seq_len, embed_dim)
         b, c, h, w = image_embeddings1.shape

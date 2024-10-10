@@ -105,6 +105,7 @@ vision_tower.to(dtype=torch_dtype, device=args.local_rank)
 
 if args.constrative:
     # model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=True)
+    model.cross_attn._reset_parameters()
     model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
 print("****** Loading Pretrained weights ******")
