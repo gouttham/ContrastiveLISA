@@ -422,6 +422,6 @@ for epoch in range(args.epochs):
     #     os.makedirs(ckpt_pth)
     #     print(f"Directory '{ckpt_pth}' created.")
 
-    if cur_iou>best_iou:
-        torch.save(model.state_dict(), os.path.join(ckpt_pth,'{}_{}.pth'.format(epoch,round(cur_iou,4))))
-        best_iou = cur_iou
+    # if cur_iou>best_iou:
+    #     torch.save(model.state_dict(), os.path.join(ckpt_pth,'{}_{}.pth'.format(epoch,round(cur_iou,4))))
+    #     best_iou = cur_iou
