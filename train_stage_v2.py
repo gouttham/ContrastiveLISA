@@ -103,7 +103,6 @@ def parse_args(args):
     parser.add_argument("--train_mask_decoder", action="store_true", default=True)
     parser.add_argument("--use_mm_start_end", action="store_true", default=True)
     parser.add_argument("--auto_resume", action="store_true", default=True)
-    parser.add_argument("--wandb_ctr", default=0, type=int)
     parser.add_argument(
         "--conv_type",
         default="llava_v1",
@@ -607,45 +606,47 @@ def train(
     end = time.time()
 
 
-    for global_step,input_dict in enumerate(train_loader):
+    for global_step in range(args.steps_per_epoch):
+        for i in range(args.grad_accumulation_steps):
+            try:
+                input_dict = next(train_iter)
+            except:
+                train_iter = iter(train_loader)
+                input_dict = next(train_iter)
+            data_time.update(time.time() - end)
+            input_dict = dict_to_cuda(input_dict)
 
-        data_time.update(time.time() - end)
-        if input_dict ==None:
-            break
-        input_dict = dict_to_cuda(input_dict)
+            if args.precision == "fp16":
+                input_dict["images"] = input_dict["images"].half()
+                input_dict["images_clip"] = input_dict["images_clip"].half()
+            elif args.precision == "bf16":
+                input_dict["images"] = input_dict["images"].bfloat16()
+                input_dict["images_clip"] = input_dict["images_clip"].bfloat16()
+            else:
+                input_dict["images"] = input_dict["images"].float()
+                input_dict["images_clip"] = input_dict["images_clip"].float()
 
-        if args.precision == "fp16":
-            input_dict["images"] = input_dict["images"].half()
-            input_dict["images_clip"] = input_dict["images_clip"].half()
-        elif args.precision == "bf16":
-            input_dict["images"] = input_dict["images"].bfloat16()
-            input_dict["images_clip"] = input_dict["images_clip"].bfloat16()
-        else:
-            input_dict["images"] = input_dict["images"].float()
-            input_dict["images_clip"] = input_dict["images_clip"].float()
+            output_dict = model(**input_dict)
 
-        output_dict = model(**input_dict)
+            loss = output_dict["loss"]
+            ce_loss = output_dict["ce_loss"]
+            mask_bce_loss = output_dict["mask_bce_loss"]
+            mask_dice_loss = output_dict["mask_dice_loss"]
+            mask_loss = output_dict["mask_loss"]
 
-        loss = output_dict["loss"]
-        ce_loss = output_dict["ce_loss"]
-        mask_bce_loss = output_dict["mask_bce_loss"]
-        mask_dice_loss = output_dict["mask_dice_loss"]
-        mask_loss = output_dict["mask_loss"]
-
-        losses.update(loss.item(), input_dict["images"].size(0))
-        ce_losses.update(ce_loss.item(), input_dict["images"].size(0))
-        mask_bce_losses.update(mask_bce_loss.item(), input_dict["images"].size(0))
-        mask_dice_losses.update(mask_dice_loss.item(), input_dict["images"].size(0))
-        mask_losses.update(mask_loss.item(), input_dict["images"].size(0))
-
-        model.backward(loss)
-        model.step()
+            losses.update(loss.item(), input_dict["images"].size(0))
+            ce_losses.update(ce_loss.item(), input_dict["images"].size(0))
+            mask_bce_losses.update(mask_bce_loss.item(), input_dict["images"].size(0))
+            mask_dice_losses.update(mask_dice_loss.item(), input_dict["images"].size(0))
+            mask_losses.update(mask_loss.item(), input_dict["images"].size(0))
+            model.backward(loss)
+            model.step()
 
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
 
-        cur_ctr = args.wandb_ctr
+
         if global_step % args.print_freq == 0:
             if args.distributed:
                 batch_time.all_reduce()
@@ -670,32 +671,20 @@ def train(
                     "train/epoch": epoch,
                 })
 
-                batch_time.reset()
-                data_time.reset()
-                losses.reset()
-                ce_losses.reset()
-                mask_bce_losses.reset()
-                mask_dice_losses.reset()
-                mask_losses.reset()
-
-                # writer.add_scalar("train/loss", losses.avg, cur_ctr)
-                # writer.add_scalar("train/ce_loss", ce_losses.avg, cur_ctr)
-                # writer.add_scalar("train/mask_bce_loss", mask_bce_losses.avg, cur_ctr)
-                # writer.add_scalar("train/mask_dice_loss", mask_dice_losses.avg, cur_ctr)
-                # writer.add_scalar("train/mask_loss", mask_losses.avg, cur_ctr)
-                # writer.add_scalar("metrics/total_secs_per_batch", batch_time.avg, cur_ctr)
-                # writer.add_scalar("metrics/data_secs_per_batch", data_time.avg, cur_ctr)
+            batch_time.reset()
+            data_time.reset()
+            losses.reset()
+            ce_losses.reset()
+            mask_bce_losses.reset()
+            mask_dice_losses.reset()
+            mask_losses.reset()
 
 
-        args.wandb_ctr += 1
-        try:
-            if global_step != 0:
-                curr_lr = scheduler.get_last_lr()
-                if args.local_rank == 0:
-                    wandb.log({"train/lr":curr_lr[0]})
-                    # writer.add_scalar("train/lr", curr_lr[0], cur_ctr)
-        except:
-            print('ISSUE')
+        if global_step != 0:
+            curr_lr = scheduler.get_last_lr()
+            if args.local_rank == 0:
+                wandb.log({"train/lr":curr_lr[0]})
+
 
     return train_iter
 
