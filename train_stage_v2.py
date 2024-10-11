@@ -737,8 +737,8 @@ def validate(val_loader, model_engine, epoch, writer, args):
         output_list = (pred_masks[0] > 0).int()
         assert len(pred_masks) == 1
 
-        masks_list_c = masks_list.copy()
-        output_list_c = output_list.copy()
+        masks_list_c = masks_list.clone()
+        output_list_c = output_list.clone()
         intersection, union, acc_iou = 0.0, 0.0, 0.0
         for mask_i, output_i in zip(masks_list_c, output_list_c):
             intersection_i, union_i, _ = intersectionAndUnionGPU(
