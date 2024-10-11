@@ -684,7 +684,6 @@ def train(
             curr_lr = scheduler.get_last_lr()
             if args.local_rank == 0:
                 wandb.log({"train/lr":curr_lr[0]})
-            return train_iter
 
 
     return train_iter
