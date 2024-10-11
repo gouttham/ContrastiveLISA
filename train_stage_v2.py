@@ -263,7 +263,7 @@ def main(args):
             
     model.cross_attn.train()
     for param in model.cross_attn.parameters():
-        param.requires_grad = False
+        param.requires_grad = True
 
     world_size = torch.cuda.device_count()
     args.distributed = world_size > 1
@@ -294,7 +294,10 @@ def main(args):
             args.constrative_dataset_dir,
             tokenizer,
             args.vision_tower,
-            samples_per_epoch=10000,
+            samples_per_epoch=args.batch_size
+                    * args.grad_accumulation_steps
+                    * args.steps_per_epoch
+                    * world_size,
             precision=args.precision,
             image_size=args.image_size,
             num_classes_per_sample=args.num_classes_per_sample,
@@ -344,7 +347,7 @@ def main(args):
                 args.constrative_dataset_dir,
                 tokenizer,
                 args.vision_tower,
-                samples_per_epoch=10000,
+                samples_per_epoch=1000,
                 precision=args.precision,
                 image_size=args.image_size,
                 num_classes_per_sample=args.num_classes_per_sample,
@@ -664,9 +667,16 @@ def train(
                     "train/mask_bce_loss":mask_bce_losses.avg,
                     "train/mask_dice_loss":mask_dice_losses.avg,
                     "train/mask_loss":mask_losses.avg,
-                    "metrics/total_secs_per_batch":batch_time.avg,
-                    "metrics/data_secs_per_batch":data_time.avg,
+                    "train/epoch": epoch,
                 })
+
+                batch_time.reset()
+                data_time.reset()
+                losses.reset()
+                ce_losses.reset()
+                mask_bce_losses.reset()
+                mask_dice_losses.reset()
+                mask_losses.reset()
 
                 # writer.add_scalar("train/loss", losses.avg, cur_ctr)
                 # writer.add_scalar("train/ce_loss", ce_losses.avg, cur_ctr)
@@ -676,13 +686,7 @@ def train(
                 # writer.add_scalar("metrics/total_secs_per_batch", batch_time.avg, cur_ctr)
                 # writer.add_scalar("metrics/data_secs_per_batch", data_time.avg, cur_ctr)
 
-            batch_time.reset()
-            data_time.reset()
-            losses.reset()
-            ce_losses.reset()
-            mask_bce_losses.reset()
-            mask_dice_losses.reset()
-            mask_losses.reset()
+
         args.wandb_ctr += 1
         try:
             if global_step != 0:
@@ -697,22 +701,26 @@ def train(
 
 
 def validate(val_loader, model_engine, epoch, writer, args):
+    clss = [
+        "no building", "undamaged building", "building with minor damage",
+        "building with major damage", "completely destroyed building"
+    ]
+
+    iou_dict = {}
+
+
     intersection_meter = AverageMeter("Intersec", ":6.3f", Summary.SUM)
     union_meter = AverageMeter("Union", ":6.3f", Summary.SUM)
     acc_iou_meter = AverageMeter("gIoU", ":6.3f", Summary.SUM)
 
-    save_dir = "./visualize_"+args.exp_name+"/"
-    try:
-        if os.path.exists(save_dir):
-            shutil.rmtree(save_dir)
-        os.makedirs(save_dir)
-    except:
-        print("Error deleting")
 
     model_engine.eval()
     
 
     ctr = 0
+    log_exp_img = []
+    image_logger = {}
+
     for input_dict in tqdm.tqdm(val_loader):
         ctr+=1
         torch.cuda.empty_cache()
@@ -741,32 +749,39 @@ def validate(val_loader, model_engine, epoch, writer, args):
 
         intersection, union, acc_iou = 0.0, 0.0, 0.0
         local_ctr=0
-        log_exp_img = []
+
         for mask_i, output_i,prmpt in zip(masks_list, output_list,input_dict['sampled_classes_list'][0]):
+            pd = output_i.cpu().numpy().astype(np.uint8)
+            gt = mask_i.cpu().numpy().astype(np.uint8)
 
-            im_array = output_i.cpu().numpy()
-            print("min : ", im_array.min())
-            print("max : ", im_array.max())
 
-            im_array = ((im_array - im_array.min()) / (im_array.max() - im_array.min())) * 255
-            im_array_pred = im_array.astype(np.uint8)
+            if len(np.unique(gt))==1 and len(np.unique(pd))==1:
+                iou_score = int(np.unique(gt)[0] == np.unique(pd)[0])
+            else:
+                intersection = np.logical_and(pd, gt)
+                union = np.logical_or(pd, gt)
+                iou_score = np.sum(intersection) / np.sum(union)
+                # print("iou_score : ",iou_score)
+                iou_score = round(iou_score, 2)
+                if np.isnan(iou_score):
+                    # print("Caught")
+                    iou_score = 0
+            iou_lists = iou_dict.get(prmpt, [])
+            iou_lists.append(iou_score)
+            iou_dict[prmpt] = iou_lists
 
-            im_array = mask_i.cpu().numpy()
-            im_array = ((im_array - im_array.min()) / (im_array.max() - im_array.min())) * 255
-            im_array_gt = im_array.astype(np.uint8)
 
-            pd = cv2.cvtColor(cv2.resize(im_array_pred, (224, 224)),cv2.COLOR_GRAY2RGB)
-            gt = cv2.cvtColor(cv2.resize(im_array_gt, (224, 224)),cv2.COLOR_GRAY2RGB)
+            pd = cv2.cvtColor(cv2.resize(pd, (224, 224)),cv2.COLOR_GRAY2RGB)
+            gt = cv2.cvtColor(cv2.resize(gt, (224, 224)),cv2.COLOR_GRAY2RGB)
 
             sv_image = np.zeros([224, 448, 3], np.uint8)
             sv_image[:224, :224] = pd
             sv_image[:224, 224:] = gt
 
+            sv_image = sv_image * 255.0
             cv2.putText(sv_image, prmpt, (10,20), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 1)
-
-            temp_name_i = str(local_ctr) + "_" + save_name
-            log_exp_img.append(wandb.Image(sv_image, caption=f"{temp_name_i}"))
-            # cv2.imwrite(os.path.join(save_dir, str(local_ctr)+"_" +save_name), sv_image)
+            temp_name_i = str(clss.index(prmpt)) + "(" + str(iou_score) + ")_" + save_name
+            image_logger[str(clss.index(prmpt))] = wandb.Image(sv_image, caption=f"{temp_name_i}")
 
             local_ctr += 1
 
@@ -777,12 +792,10 @@ def validate(val_loader, model_engine, epoch, writer, args):
             union += union_i
             acc_iou += intersection_i / (union_i + 1e-5)
             acc_iou[union_i == 0] += 1.0  # no-object target
-        wandb.log({"visualization":log_exp_img})
+
         intersection, union = intersection.cpu().numpy(), union.cpu().numpy()
         acc_iou = acc_iou.cpu().numpy() / masks_list.shape[0]
-        intersection_meter.update(intersection), union_meter.update(
-            union
-        ), acc_iou_meter.update(acc_iou, n=masks_list.shape[0])
+        intersection_meter.update(intersection), union_meter.update(union), acc_iou_meter.update(acc_iou, n=masks_list.shape[0])
 
     intersection_meter.all_reduce()
     union_meter.all_reduce()
@@ -794,9 +807,18 @@ def validate(val_loader, model_engine, epoch, writer, args):
 
     if args.local_rank == 0:
         wandb.log({"val/giou": giou, "val/ciou": ciou })
-        # writer.add_scalar("val/giou", giou, epoch)
-        # writer.add_scalar("val/ciou", ciou, epoch)
         print("giou: {:.4f}, ciou: {:.4f}".format(giou, ciou))
+
+        for ech_cls in ['0','1','2','3','4']:
+            if ech_cls in image_logger:
+                log_exp_img.append(image_logger[ech_cls])
+            else:
+                log_exp_img.append(wandb.Image(sv_image * 0, caption=f"{ech_cls}_fillers"))
+
+
+        wandb.log({"visualization": log_exp_img})
+
+
 
     return giou, ciou
 
