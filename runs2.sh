@@ -5,11 +5,12 @@ deepspeed --master_port=24999 train_stage_v2.py \
   --vision_pretrained=./mbin/sam_vit_h_4b8939.pth \
   --vision-tower './mbin/clip-vit-large-patch14' \
   --sample_rates='1' \
-  --epochs='200' \
+  --epochs='1000' \
   --dataset='contrastive_cd_dataset' \
-  --exp_name="stagev2_xbd_fixed_t13" \
+  --exp_name="stagev2_xbd" \
   --batch_size 4 \
-  --steps_per_epoch 1541 \
-  --const_seg_data "xbd"
+  --steps_per_epoch 50 \
+  --const_seg_data "xbd" \
+  --num_classes_per_sample 5
 
 #  stagev2_xbd_fixed_t13
