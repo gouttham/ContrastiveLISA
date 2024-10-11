@@ -737,8 +737,23 @@ def validate(val_loader, model_engine, epoch, writer, args):
         output_list = (pred_masks[0] > 0).int()
         assert len(pred_masks) == 1
 
+        masks_list_c = masks_list.copy()
+        output_list_c = output_list.copy()
         intersection, union, acc_iou = 0.0, 0.0, 0.0
-        local_ctr=0
+        for mask_i, output_i in zip(masks_list_c, output_list_c):
+            intersection_i, union_i, _ = intersectionAndUnionGPU(
+                output_i.contiguous().clone(), mask_i.contiguous(), 2, ignore_index=255
+            )
+            intersection += intersection_i
+            union += union_i
+            acc_iou += intersection_i / (union_i + 1e-5)
+            acc_iou[union_i == 0] += 1.0  # no-object target
+        intersection, union = intersection.cpu().numpy(), union.cpu().numpy()
+        acc_iou = acc_iou.cpu().numpy() / masks_list.shape[0]
+        intersection_meter.update(intersection), union_meter.update(
+            union
+        ), acc_iou_meter.update(acc_iou, n=masks_list.shape[0])
+
 
         for mask_i, output_i,prmpt in zip(masks_list, output_list,input_dict['sampled_classes_list'][0]):
             pd = output_i.cpu().numpy().astype(np.uint8)
@@ -773,19 +788,7 @@ def validate(val_loader, model_engine, epoch, writer, args):
             temp_name_i = str(clss.index(prmpt)) + "(" + str(iou_score) + ")_" + save_name
             image_logger[str(clss.index(prmpt))] = wandb.Image(sv_image, caption=f"{temp_name_i}")
 
-            local_ctr += 1
 
-            intersection_i, union_i, _ = intersectionAndUnionGPU(
-                output_i.contiguous().clone(), mask_i.contiguous(), 2, ignore_index=255
-            )
-            intersection += intersection_i
-            union += union_i
-            acc_iou += intersection_i / (union_i + 1e-5)
-            acc_iou[union_i == 0] += 1.0  # no-object target
-
-        intersection, union = intersection.cpu().numpy(), union.cpu().numpy()
-        acc_iou = acc_iou.cpu().numpy() / masks_list.shape[0]
-        intersection_meter.update(intersection), union_meter.update(union), acc_iou_meter.update(acc_iou, n=masks_list.shape[0])
 
     intersection_meter.all_reduce()
     union_meter.all_reduce()
