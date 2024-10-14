@@ -30,21 +30,20 @@ class DisasterAttentionModel(nn.Module):
         self.conv_proj = nn.Sequential(
             nn.Conv2d(dim, dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(dim),
-            nn.ReLU(inplace=True),  # First activation function
+            nn.ReLU(inplace=True),
 
             nn.Conv2d(dim, dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(dim),
-            nn.ReLU(inplace=True),  # Second activation function
+            nn.ReLU(inplace=True),
 
-            nn.Conv2d(dim, dim, kernel_size=1),  # 1x1 Conv to retain channel dimensions
+            nn.Conv2d(dim, dim, kernel_size=1),
             nn.Tanh()  # Final activation to scale output between -1 and 1
         )
 
-        # Apply weight initialization
-        self._initialize_weights()
+        # Apply weight initialization, reinitializing if NaN values are detected
+        self._initialize_weights_with_nan_check()
 
     def forward(self, x1, x2):
-        # Flatten spatial dimensions and reorder for MultiheadAttention: (B, C, H, W) -> (B, H*W, C)
         B, C, H, W = x1.shape
         x1_flat = x1.view(B, C, H * W).permute(0, 2, 1)  # (B, H*W, C)
         x2_flat = x2.view(B, C, H * W).permute(0, 2, 1)  # (B, H*W, C)
@@ -63,28 +62,33 @@ class DisasterAttentionModel(nn.Module):
 
         return combined_features
 
-    def _initialize_weights(self):
+    def _initialize_weights_with_nan_check(self):
         """
-        Properly initialize weights to prevent NaN values during training.
+        Properly initialize weights, checking for NaN values and reinitializing if necessary.
         """
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                # He initialization for ReLU layers
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.BatchNorm2d):
-                # Initialize BatchNorm weights
-                nn.init.constant_(m.weight, 1)
-                nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.MultiheadAttention):
-                # Xavier initialization for multi-head attention
-                nn.init.xavier_uniform_(m.in_proj_weight)
-                nn.init.xavier_uniform_(m.out_proj.weight)
-                if m.in_proj_bias is not None:
-                    nn.init.constant_(m.in_proj_bias, 0)
-                if m.out_proj.bias is not None:
-                    nn.init.constant_(m.out_proj.bias, 0)
+        for name, param in self.named_parameters():
+            if param.isnan().any():  # Check if there are NaN values
+                print(f"Reinitializing: {name}")
+
+                if 'cross_attention.in_proj_weight' in name or 'cross_attention.out_proj.weight' in name:
+                    # Xavier initialization for multihead attention weights
+                    nn.init.xavier_uniform_(param)
+
+                elif 'conv_proj' in name and 'weight' in name:
+                    # He initialization for convolutional layers with ReLU activation
+                    nn.init.kaiming_normal_(param, mode='fan_out', nonlinearity='relu')
+
+                elif 'conv_proj' in name and 'bias' in name:
+                    # Initialize biases to zero
+                    nn.init.constant_(param, 0)
+
+                elif 'BatchNorm' in name and 'weight' in name:
+                    # Initialize BatchNorm weight to 1
+                    nn.init.constant_(param, 1)
+
+                elif 'BatchNorm' in name and 'bias' in name:
+                    # Initialize BatchNorm bias to 0
+                    nn.init.constant_(param, 0)
 
 
 def dice_loss(
