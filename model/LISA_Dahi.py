@@ -93,14 +93,14 @@ def sigmoid_ce_loss(
         Loss tensor
     """
     loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
-    loss = loss.flatten(1, 2).mean(1).sum() / (num_masks + 1e-8)
-    return loss
-    # alpha = 1.0
-    # gamma = 2.0
-    # pt = torch.exp(-loss)  # Probability of true class
-    # F_loss = alpha * (1 - pt) ** gamma * loss
-    # F_loss = F_loss.flatten(1, 2).mean(1).sum() / (num_masks + 1e-8)
-    # return F_loss  # or use 'sum' based on your requirement
+    # loss = loss.flatten(1, 2).mean(1).sum() / (num_masks + 1e-8)
+    # return loss
+    alpha = 1.0
+    gamma = 2.0
+    pt = torch.exp(-loss)  # Probability of true class
+    F_loss = alpha * (1 - pt) ** gamma * loss
+    F_loss = F_loss.flatten(1, 2).mean(1).sum() / (num_masks + 1e-8)
+    return F_loss  # or use 'sum' based on your requirement
 
 class LisaMetaModel:
     def __init__(

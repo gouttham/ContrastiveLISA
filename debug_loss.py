@@ -46,6 +46,7 @@ args.lr = 0.0001
 args.lr2 = 0.001
 args.epochs = 300
 args.ce_loss_weight = 0.0
+args.use_scheduler = True
 
 args.num_classes_per_sample = 5
 args.batch_size = 2
@@ -309,6 +310,22 @@ clss = [
     "building with major damage", "completely destroyed building"
 ]
 
+
+if args.use_scheduler:
+    # Learning rate scheduler setup
+    total_steps = train_loader.__len__()
+    scheduler = get_linear_schedule_with_warmup(
+        optimizer,
+        num_warmup_steps=100,
+        num_training_steps=total_steps
+    )
+
+    scheduler_cross_attn = get_linear_schedule_with_warmup(
+        cross_attn_optimizer,
+        num_warmup_steps=100,
+        num_training_steps=total_steps
+    )
+
 optimizer.zero_grad()
 cross_attn_optimizer.zero_grad()
 best_iou = 0
@@ -353,6 +370,7 @@ for epoch in range(args.epochs):
 
         if args.use_scheduler:
             scheduler.step()
+            scheduler_cross_attn.step()
 
         losses.update(loss.item(), input_dict["images"].size(0))
         ce_losses.update(output_dict["ce_loss"].item(), input_dict["images"].size(0))
