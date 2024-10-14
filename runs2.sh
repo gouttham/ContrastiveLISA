@@ -11,6 +11,6 @@ deepspeed --master_port=24999 train_stage_v2.py \
   --batch_size 4 \
   --steps_per_epoch 50 \
   --const_seg_data "xbd" \
-  --num_classes_per_sample 5
+  --num_classes_per_sample 3
 
 #  stagev2_xbd_fixed_t13

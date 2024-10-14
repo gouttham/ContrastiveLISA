@@ -787,11 +787,14 @@ def validate(val_loader, model_engine, epoch, writer, args):
             temp_name_i = str(clss.index(prmpt)) + "(" + str(iou_score) + ")_" + save_name
             image_logger[str(clss.index(prmpt))] = wandb.Image(sv_image, caption=f"{temp_name_i}")
 
+
         for ech_cls in ['0','1','2','3','4']:
             if ech_cls in image_logger:
                 log_exp_img.append(image_logger[ech_cls])
             else:
                 log_exp_img.append(wandb.Image(sv_image * 0, caption=f"{ech_cls}_fillers"))
+
+        wandb.log({"visualization": log_exp_img})
 
 
 
@@ -806,7 +809,7 @@ def validate(val_loader, model_engine, epoch, writer, args):
     if args.local_rank == 0:
         wandb.log({"val/giou": giou, "val/ciou": ciou })
         print("giou: {:.4f}, ciou: {:.4f}".format(giou, ciou))
-        wandb.log({"visualization": log_exp_img})
+
 
         total_avg = []
         wandb_dict = {}
