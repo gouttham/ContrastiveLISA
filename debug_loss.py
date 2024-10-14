@@ -255,7 +255,7 @@ optimizer = optim.AdamW(
 cross_attn_optimizer = optim.AdamW(
     model.cross_attn.parameters(),
     lr=args.lr2,  # You can use a different learning rate for cross-attn if desired
-    betas=(args.cross_attn_beta1, args.cross_attn_beta2),
+    betas=(args.beta1, args.beta2),
     weight_decay=0.0
 )
 
