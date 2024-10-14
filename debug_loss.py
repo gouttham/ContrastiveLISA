@@ -136,7 +136,10 @@ def initialize_weights(module,name=""):
 
 
 if args.constrative:
-    w = model.cross_attn.apply(initialize_weights)
+    for name, param in model.cross_attn.named_parameters():
+        init.xavier_normal_(param)
+
+    # w = model.cross_attn.apply(initialize_weights)
     # model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
     model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
