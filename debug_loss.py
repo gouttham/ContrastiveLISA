@@ -36,7 +36,7 @@ args = my_utils.parse_args(sys.argv[1:])
 
 # args.exp_name = "NP_S1_cls_1_noCELoss_2"
 # args.exp_name = "NP_S2_cls_1_noCELoss_4"
-args.exp_name = "joint_training"
+args.exp_name = "joint_training_val_OF"
 args.const_seg_data="xbd"
 args.version="./mbin/test/LLaVA-7B-Lightening-v1-1/"
 args.constrative_dataset_dir="/localscratch/gna23/cd-datasets/"
@@ -477,5 +477,15 @@ for epoch in range(args.epochs):
     wandb_dict['val/iou'] = cur_iou
     wandb_dict['val/val_step']=epoch
     wandb.log(wandb_dict)
+
+
+    ckpt_pth = os.path.join("./new_pipeline_model",args.exp_name)
+    if not os.path.exists(ckpt_pth):
+        os.makedirs(ckpt_pth)
+        print(f"Directory '{ckpt_pth}' created.")
+
+    if cur_iou>best_iou:
+        torch.save(model.state_dict(), os.path.join(ckpt_pth,'{}_{}.pth'.format(epoch,round(cur_iou,4))))
+        best_iou = cur_iou
 
 
