@@ -43,6 +43,7 @@ args.constrative_dataset_dir="/localscratch/gna23/overfit/"
 args.dataset_dir="/localscratch/gna23/overfit/"
 args.use_scheduler = False
 args.lr = 0.0001
+args.lr2 = 0.001
 args.epochs = 300
 args.ce_loss_weight = 0.0
 
@@ -242,21 +243,37 @@ val_loader = torch.utils.data.DataLoader(
 
 # optimizer
 
+
 optimizer = optim.AdamW(
-    model.parameters(),
+    [param for name, param in model.named_parameters() if 'cross_attn' not in name],
     lr=args.lr,
     betas=(args.beta1, args.beta2),
     weight_decay=0.0
 )
 
-if args.use_scheduler:
-    # Learning rate scheduler setup
-    total_steps = args.epochs * args.steps_per_epoch
-    scheduler = get_linear_schedule_with_warmup(
-        optimizer,
-        num_warmup_steps=100,
-        num_training_steps=total_steps
-    )
+# Separate optimizer for cross-attn parameters
+cross_attn_optimizer = optim.AdamW(
+    model.cross_attn.parameters(),
+    lr=args.lr2,  # You can use a different learning rate for cross-attn if desired
+    betas=(args.cross_attn_beta1, args.cross_attn_beta2),
+    weight_decay=0.0
+)
+
+# optimizer = optim.AdamW(
+#     model.parameters(),
+#     lr=args.lr,
+#     betas=(args.beta1, args.beta2),
+#     weight_decay=0.0
+# )
+#
+# if args.use_scheduler:
+#     # Learning rate scheduler setup
+#     total_steps = args.epochs * args.steps_per_epoch
+#     scheduler = get_linear_schedule_with_warmup(
+#         optimizer,
+#         num_warmup_steps=100,
+#         num_training_steps=total_steps
+#     )
 
 
 # Mixed precision training
@@ -288,6 +305,7 @@ clss = [
 ]
 
 optimizer.zero_grad()
+cross_attn_optimizer.zero_grad()
 best_iou = 0
 clock = 0
 for epoch in range(args.epochs):
@@ -322,7 +340,10 @@ for epoch in range(args.epochs):
         # torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
         optimizer.step()
+        cross_attn_optimizer.step()
+
         optimizer.zero_grad()
+        cross_attn_optimizer.zero_grad()
 
 
         if args.use_scheduler:
