@@ -18,6 +18,47 @@ from .attention_utils_dahi import cross_attention
 import numpy as np
 import pdb
 
+
+class DisasterAttentionModel(nn.Module):
+    def __init__(self, dim, num_heads=8):
+        super(DisasterAttentionModel, self).__init__()
+        # Multihead attention for cross-attention between pre- and post-disaster feature maps
+        self.cross_attention = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, batch_first=True)
+
+        # Deeper projection layer with batch normalization and activations
+        self.conv_proj = nn.Sequential(
+            nn.Conv2d(dim, dim, kernel_size=3, padding=1),
+            nn.BatchNorm2d(dim),
+            nn.ReLU(inplace=True),  # First activation function
+
+            nn.Conv2d(dim, dim, kernel_size=3, padding=1),
+            nn.BatchNorm2d(dim),
+            nn.ReLU(inplace=True),  # Second activation function
+
+            nn.Conv2d(dim, dim, kernel_size=1),  # 1x1 Conv to retain channel dimensions
+            nn.Tanh()  # Final activation to scale output between -1 and 1
+        )
+
+    def forward(self, x1, x2):
+        # Flatten spatial dimensions and reorder for MultiheadAttention: (B, C, H, W) -> (B, H*W, C)
+        B, C, H, W = x1.shape
+        x1_flat = x1.view(B, C, H * W).permute(0, 2, 1)  # (B, H*W, C)
+        x2_flat = x2.view(B, C, H * W).permute(0, 2, 1)  # (B, H*W, C)
+
+        # Compute cross-attention: Q=x1 (pre-disaster), K=x2 (post-disaster), V=x2 (post-disaster)
+        attended_output, _ = self.cross_attention(query=x1_flat, key=x2_flat, value=x2_flat)
+
+        # Reshape back to original: (B, H*W, C) -> (B, C, H, W)
+        attended_output = attended_output.permute(0, 2, 1).view(B, C, H, W)
+
+        # Subtract attended features from post-disaster features to highlight differences
+        combined_features = x2 - attended_output
+
+        # Apply the deeper convolutional projection to refine the output
+        combined_features = self.conv_proj(combined_features)
+
+        return combined_features
+
 def dice_loss(
     inputs: torch.Tensor,
     targets: torch.Tensor,
@@ -161,7 +202,8 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
 
         try:
             self.constrative = kwargs.pop("constrative")
-            self.cross_attn = cross_attention()
+            # self.cross_attn = cross_attention()
+            self.cross_attn = DisasterAttentionModel(dim=256, num_heads=8)
             
         except:
             print("No Constrative")
