@@ -38,8 +38,6 @@ class DisasterAttentionModel(nn.Module):
             nn.Tanh()
         )
 
-        self._initialize_weights_with_nan_check()
-
     def forward(self, x1, x2):
         B, C, H, W = x1.shape
         x1_flat = x1.view(B, C, H * W).permute(0, 2, 1)  # (B, H*W, C)
@@ -52,21 +50,6 @@ class DisasterAttentionModel(nn.Module):
         combined_features = self.conv_proj(combined_features)
 
         return combined_features
-
-    def _initialize_weights_with_nan_check(self):
-        for name, param in self.named_parameters():
-            if param.isnan().any():
-                print(f"Reinitializing: {name}")
-                if 'cross_attention.in_proj_weight' in name or 'cross_attention.out_proj.weight' in name:
-                    nn.init.xavier_uniform_(param)
-                elif 'conv_proj' in name and 'weight' in name:
-                    nn.init.kaiming_normal_(param, mode='fan_out', nonlinearity='relu')
-                elif 'conv_proj' in name and 'bias' in name:
-                    nn.init.constant_(param, 0)
-                elif 'BatchNorm' in name and 'weight' in name:
-                    nn.init.constant_(param, 1)
-                elif 'BatchNorm' in name and 'bias' in name:
-                    nn.init.constant_(param, 0)
 
 
 def dice_loss(
