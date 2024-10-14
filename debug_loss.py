@@ -131,6 +131,8 @@ def initialize_weights(module):
         # Initialize Embedding layers (optional if applicable)
         init.normal_(module.weight, mean=0, std=0.01)
 
+
+model.apply(initialize_weights)
 if args.constrative:
     model.cross_attn.apply(initialize_weights)
     # model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
