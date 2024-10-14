@@ -78,12 +78,12 @@ def dice_loss(
     return loss
 
 
-def focal_loss(pred_mask, gt_mask, alpha=0.25, gamma=2.0, num_masks=1):
+def focal_loss(logits, gt_mask, alpha=0.25, gamma=2.0, num_masks=1):
     """
-    Calculate the Focal Loss.
+    Calculate the Focal Loss using logits.
 
     Args:
-        pred_mask (torch.Tensor): The predicted mask (after sigmoid).
+        logits (torch.Tensor): The predicted logits.
         gt_mask (torch.Tensor): The ground truth mask.
         alpha (float): Weighting factor for the class (default=0.25).
         gamma (float): Focusing parameter (default=2.0).
@@ -92,10 +92,11 @@ def focal_loss(pred_mask, gt_mask, alpha=0.25, gamma=2.0, num_masks=1):
     Returns:
         torch.Tensor: The computed focal loss.
     """
-    pred_mask = torch.sigmoid(pred_mask)  # Ensure predictions are in [0, 1]
+    # Compute binary cross-entropy from logits
+    bce_loss = F.binary_cross_entropy_with_logits(logits, gt_mask, reduction='none')
 
-    # Compute binary cross-entropy
-    bce_loss = F.binary_cross_entropy(pred_mask, gt_mask, reduction='none')
+    # Apply sigmoid to logits to get probabilities
+    pred_mask = torch.sigmoid(logits)
 
     # Compute focal loss components
     pt = pred_mask * gt_mask + (1 - pred_mask) * (1 - gt_mask)
