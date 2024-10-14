@@ -421,7 +421,8 @@ class cross_attention(torch.nn.Module):
             nn.BatchNorm2d(512),
             nn.ReLU(),
             nn.Conv2d(512, 256, kernel_size=3,padding=1),
-            # nn.BatchNorm2d(256),
+            nn.BatchNorm2d(256),
+            nn.Tanh(),
         )
         
         # self.bn_x1 = nn.BatchNorm2d(256)
