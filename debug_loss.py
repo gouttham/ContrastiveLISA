@@ -157,6 +157,13 @@ def initialize_weights(module):
 
 if args.constrative:
     model.cross_attn.apply(initialize_weights)
+    init.normal_(model.cross_attn.pos_embedding_1, mean=0.0, std=1)
+    init.normal_(model.cross_attn.pos_embedding_2, mean=0.0, std=1)
+    init.normal_(model.cross_attn.pos_embedding_3, mean=0.0, std=1)
+    init.normal_(model.cross_attn.pos_embedding_decoder_1, mean=0.0, std=1)
+    init.normal_(model.cross_attn.pos_embedding_decoder_2, mean=0.0, std=1)
+    init.normal_(model.cross_attn.pos_embedding_decoder_3, mean=0.0, std=1)
+
 
     for name, module in model.cross_attn.named_modules():
         for param_name, param in module.named_parameters(recurse=False):
