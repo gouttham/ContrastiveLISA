@@ -157,21 +157,7 @@ def initialize_weights(module):
 
 if args.constrative:
     model.cross_attn.apply(initialize_weights)
-    init.normal_(model.cross_attn.pos_embedding_1, mean=0.0, std=1)
-    init.normal_(model.cross_attn.pos_embedding_2, mean=0.0, std=1)
-    init.normal_(model.cross_attn.pos_embedding_3, mean=0.0, std=1)
-    init.normal_(model.cross_attn.pos_embedding_decoder_1, mean=0.0, std=1)
-    init.normal_(model.cross_attn.pos_embedding_decoder_2, mean=0.0, std=1)
-    init.normal_(model.cross_attn.pos_embedding_decoder_3, mean=0.0, std=1)
-
-
-    for name, module in model.cross_attn.named_modules():
-        for param_name, param in module.named_parameters(recurse=False):
-            if torch.isnan(param).any().item():
-                print(f"NaN found in parameter '{param_name}' of submodule '{name}'")
-
-    # w = model.cross_attn.apply(initialize_weights)
-    # model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
+    model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
     model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
 print("****** Loading Pretrained weights ******")
