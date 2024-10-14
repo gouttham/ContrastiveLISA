@@ -128,6 +128,12 @@ def initialize_weights(module):
         # Initialize Embedding layers
         init.normal_(module.weight, mean=0, std=0.01)
 
+    elif isinstance(module, nn.ConvTranspose2d):
+        # Kaiming initialization for ConvTranspose layers
+        init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
+        if module.bias is not None:
+            init.constant_(module.bias, 0)
+
     # Additional checks for other module types
     if isinstance(module, nn.Module):
         for name, param in module.named_parameters(recurse=False):
@@ -141,6 +147,13 @@ def initialize_weights(module):
                     init.xavier_normal_(param)
                 elif isinstance(module, nn.Conv2d):
                     init.kaiming_normal_(param, mode='fan_out', nonlinearity='relu')
+
+    if hasattr(module, 'pos_embedding_decoder_1'):
+        init.normal_(module.pos_embedding_decoder_1, mean=0.0, std=0.01)
+    if hasattr(module, 'pos_embedding_decoder_2'):
+        init.normal_(module.pos_embedding_decoder_1, mean=0.0, std=0.01)
+    if hasattr(module, 'pos_embedding_decoder_3'):
+        init.normal_(module.pos_embedding_decoder_1, mean=0.0, std=0.01)
 
 
 
