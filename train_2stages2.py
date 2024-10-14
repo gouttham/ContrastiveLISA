@@ -35,14 +35,13 @@ import torch.nn as nn
 args = my_utils.parse_args(sys.argv[1:])
 
 # args.exp_name = "NP_S1_cls_1_noCELoss_2"
-# args.exp_name = "NP_S2_cls_1_noCELoss_4"
-args.exp_name = "debugging"
+args.exp_name = "NP_S2_cls_1_noCELoss_4"
 args.const_seg_data="xbd"
 args.version="./mbin/test/LLaVA-7B-Lightening-v1-1/"
-args.constrative_dataset_dir="/localscratch/gna23/overfit/"
-args.dataset_dir="/localscratch/gna23/overfit/"
+args.constrative_dataset_dir="/localscratch/gna23/cd-datasets/"
+args.dataset_dir="/localscratch/gna23/cd-datasets/"
 args.use_scheduler = False
-args.lr = 0.00001
+args.lr = 0.0001
 args.epochs = 300
 args.ce_loss_weight = 0.0
 
@@ -105,7 +104,7 @@ vision_tower = model.get_model().get_vision_tower()
 vision_tower.to(dtype=torch_dtype, device=args.local_rank)
 
 if args.constrative:
-    model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
+    model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=True)
     model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
 print("****** Loading Pretrained weights ******")
@@ -152,9 +151,8 @@ if lora_r > 0:
 model.resize_token_embeddings(len(tokenizer))
 
 
-# Stage1 weights
-# new_model = torch.load("./new_pipeline_model/NP_S1_cls_1_noCELoss_2/best.pth")
-# model.load_state_dict(new_model,strict=True)
+new_model = torch.load("./new_pipeline_model/NP_S1_cls_1_noCELoss_2/best.pth")
+model.load_state_dict(new_model,strict=True)
 
 for n, p in model.named_parameters():
     if any([x in n for x in ["lm_head", "embed_tokens", "mask_decoder", "text_hidden_fcs", "lora_"]]):
@@ -212,7 +210,7 @@ val_dataset = HybridDataset(
             precision=args.precision,
             image_size=args.image_size,
             num_classes_per_sample=5,
-            exclude_val=False,
+            exclude_val=True,
             dataset=args.dataset,
             sample_rate=[1],
             sem_seg_data=args.sem_seg_data,
@@ -292,9 +290,9 @@ best_iou = 0
 clock = 0
 for epoch in range(args.epochs):
 
-    # if epoch > 30:
-    #     for param_group in optimizer.param_groups:
-    #         param_group['lr'] = 0.00001
+    if epoch > 30:
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = 0.00001
 
     losses = AverageMeter("Loss", ":.4f")
     ce_losses = AverageMeter("CeLoss", ":.4f")

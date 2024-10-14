@@ -11,7 +11,7 @@ import tqdm
 
 from peft import LoraConfig, get_peft_model
 
-from model.LISA_Dahi3 import LISAForCausalLM
+from model.LISA_Dahi import LISAForCausalLM
 from model.llava import conversation as conversation_lib
 from utils.dataset import HybridDataset, ValDataset, collate_fn,collate_fn3
 from utils.utils import (DEFAULT_IM_END_TOKEN, DEFAULT_IM_START_TOKEN,
@@ -35,12 +35,12 @@ import torch.nn as nn
 args = my_utils.parse_args(sys.argv[1:])
 
 # args.exp_name = "NP_S1_cls_1_noCELoss_2"
+# args.exp_name = "NP_S2_cls_1_noCELoss_4"
 args.exp_name = "debugging"
 args.const_seg_data="xbd"
 args.version="./mbin/test/LLaVA-7B-Lightening-v1-1/"
 args.constrative_dataset_dir="/localscratch/gna23/overfit/"
-# args.constrative_dataset_dir="/localscratch/gna23/cd-datasets/"
-args.dataset_dir="/localscratch/gna23/cd-datasets/"
+args.dataset_dir="/localscratch/gna23/overfit/"
 args.use_scheduler = False
 args.lr = 0.0001
 args.epochs = 300
@@ -50,7 +50,7 @@ args.num_classes_per_sample = 5
 args.batch_size = 2
 
 # args.num_classes_per_sample = 1
-# args.batch_size = 2
+# args.batch_size = 10
 
 # args.local_rank = "cpu"
 # args.version = "mmaaz60/LLaVA-7B-Lightening-v1-1"
@@ -105,27 +105,7 @@ vision_tower = model.get_model().get_vision_tower()
 vision_tower.to(dtype=torch_dtype, device=args.local_rank)
 
 if args.constrative:
-    # model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=True)
-    def initialize_weights(model):
-        for m in model.modules():
-            if isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Linear):
-                nn.init.xavier_uniform_(m.weight)
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.LayerNorm) or isinstance(m, nn.BatchNorm2d):
-                nn.init.constant_(m.weight, 1)
-                nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Parameter):
-                for name, param in m.named_parameters():
-                    if 'pos_embedding' in name or 'pos_embedding_decoder' in name:
-                        nn.init.xavier_uniform_(param)
-
-
-    initialize_weights(model)
+    model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
     model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
 print("****** Loading Pretrained weights ******")
@@ -141,7 +121,6 @@ for p in model.get_model().mm_projector.parameters():
     p.requires_grad = False
 
 conversation_lib.default_conversation = conversation_lib.conv_templates[args.conv_type]
-
 
 lora_r = args.lora_r
 if lora_r > 0:
@@ -173,6 +152,7 @@ if lora_r > 0:
 model.resize_token_embeddings(len(tokenizer))
 
 
+# Stage1 weights
 # new_model = torch.load("./new_pipeline_model/NP_S1_cls_1_noCELoss_2/best.pth")
 # model.load_state_dict(new_model,strict=True)
 
@@ -223,7 +203,6 @@ train_loader = torch.utils.data.DataLoader(
             ),
 
         )
-
 
 val_dataset = HybridDataset(
             args.constrative_dataset_dir,
@@ -318,6 +297,10 @@ for epoch in range(args.epochs):
     #         param_group['lr'] = 0.00001
 
     losses = AverageMeter("Loss", ":.4f")
+    ce_losses = AverageMeter("CeLoss", ":.4f")
+    mask_bce_losses = AverageMeter("MaskBCELoss", ":.4f")
+    mask_dice_losses = AverageMeter("MaskDICELoss", ":.4f")
+    mask_losses = AverageMeter("MaskLoss", ":.4f")
 
     model.train()
 
@@ -346,16 +329,29 @@ for epoch in range(args.epochs):
             scheduler.step()
 
         losses.update(loss.item(), input_dict["images"].size(0))
+        ce_losses.update(output_dict["ce_loss"].item(), input_dict["images"].size(0))
+        mask_bce_losses.update(output_dict["mask_bce_loss"].item(), input_dict["images"].size(0))
+        mask_dice_losses.update(output_dict["mask_dice_loss"].item(), input_dict["images"].size(0))
+        mask_losses.update(output_dict["mask_loss"].item(), input_dict["images"].size(0))
 
         if train_idx % 100 ==0:
             print("epoch : ",epoch," iter : ",train_idx," loss : ",losses.avg)
             wandb.log({
                 "train/loss":losses.avg,
+                "train/ce_loss": ce_losses.avg,
+                "train/mask_bce_loss": mask_bce_losses.avg,
+                "train/mask_dice_loss": mask_dice_losses.avg,
+                "train/mask_loss": mask_losses.avg,
                 "train/lr": optimizer.param_groups[0]['lr'],
                 "train/epoch": epoch,
                 "train/train_step" : clock
             })
             losses.reset()
+            ce_losses.reset()
+            mask_bce_losses.reset()
+            mask_dice_losses.reset()
+            mask_losses.reset()
+
 
         # break
 
@@ -439,11 +435,11 @@ for epoch in range(args.epochs):
     wandb.log(wandb_dict)
 
 
-    # ckpt_pth = os.path.join("./new_pipeline_model",args.exp_name)
-    # if not os.path.exists(ckpt_pth):
-    #     os.makedirs(ckpt_pth)
-    #     print(f"Directory '{ckpt_pth}' created.")
+    ckpt_pth = os.path.join("./new_pipeline_model",args.exp_name)
+    if not os.path.exists(ckpt_pth):
+        os.makedirs(ckpt_pth)
+        print(f"Directory '{ckpt_pth}' created.")
 
-    # if cur_iou>best_iou:
-    #     torch.save(model.state_dict(), os.path.join(ckpt_pth,'{}_{}.pth'.format(epoch,round(cur_iou,4))))
-    #     best_iou = cur_iou
+    if cur_iou>best_iou:
+        torch.save(model.state_dict(), os.path.join(ckpt_pth,'{}_{}.pth'.format(epoch,round(cur_iou,4))))
+        best_iou = cur_iou
