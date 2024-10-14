@@ -22,6 +22,7 @@ import pdb
 class DisasterAttentionModel(nn.Module):
     def __init__(self, dim, num_heads=8):
         super(DisasterAttentionModel, self).__init__()
+
         # Multihead attention for cross-attention between pre- and post-disaster feature maps
         self.cross_attention = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, batch_first=True)
 
@@ -38,6 +39,9 @@ class DisasterAttentionModel(nn.Module):
             nn.Conv2d(dim, dim, kernel_size=1),  # 1x1 Conv to retain channel dimensions
             nn.Tanh()  # Final activation to scale output between -1 and 1
         )
+
+        # Apply weight initialization
+        self._initialize_weights()
 
     def forward(self, x1, x2):
         # Flatten spatial dimensions and reorder for MultiheadAttention: (B, C, H, W) -> (B, H*W, C)
@@ -58,6 +62,30 @@ class DisasterAttentionModel(nn.Module):
         combined_features = self.conv_proj(combined_features)
 
         return combined_features
+
+    def _initialize_weights(self):
+        """
+        Properly initialize weights to prevent NaN values during training.
+        """
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                # He initialization for ReLU layers
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                # Initialize BatchNorm weights
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.MultiheadAttention):
+                # Xavier initialization for multi-head attention
+                nn.init.xavier_uniform_(m.in_proj_weight)
+                nn.init.xavier_uniform_(m.out_proj.weight)
+                if m.in_proj_bias is not None:
+                    nn.init.constant_(m.in_proj_bias, 0)
+                if m.out_proj.bias is not None:
+                    nn.init.constant_(m.out_proj.bias, 0)
+
 
 def dice_loss(
     inputs: torch.Tensor,
