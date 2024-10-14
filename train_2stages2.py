@@ -42,7 +42,7 @@ args.version="./mbin/test/LLaVA-7B-Lightening-v1-1/"
 args.constrative_dataset_dir="/localscratch/gna23/overfit/"
 args.dataset_dir="/localscratch/gna23/overfit/"
 args.use_scheduler = False
-args.lr = 0.001
+args.lr = 0.00001
 args.epochs = 300
 args.ce_loss_weight = 0.0
 
