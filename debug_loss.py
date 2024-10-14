@@ -153,12 +153,12 @@ def initialize_weights(module):
 
 
 if args.constrative:
-    for n,w in model.names_parameters():
+    for n,w in model.named_parameters():
         if torch.isnan(w).any():
             print(n)
     model.cross_attn.apply(initialize_weights)
 
-    for n,w in model.names_parameters():
+    for n,w in model.named_parameters():
         if torch.isnan(w).any():
             print(n)
     0/0
