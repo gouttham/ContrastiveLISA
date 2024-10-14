@@ -78,6 +78,34 @@ def dice_loss(
     return loss
 
 
+def focal_loss(pred_mask, gt_mask, alpha=0.25, gamma=2.0, num_masks=1):
+    """
+    Calculate the Focal Loss.
+
+    Args:
+        pred_mask (torch.Tensor): The predicted mask (after sigmoid).
+        gt_mask (torch.Tensor): The ground truth mask.
+        alpha (float): Weighting factor for the class (default=0.25).
+        gamma (float): Focusing parameter (default=2.0).
+        num_masks (int): The number of masks.
+
+    Returns:
+        torch.Tensor: The computed focal loss.
+    """
+    pred_mask = torch.sigmoid(pred_mask)  # Ensure predictions are in [0, 1]
+
+    # Compute binary cross-entropy
+    bce_loss = F.binary_cross_entropy(pred_mask, gt_mask, reduction='none')
+
+    # Compute focal loss components
+    pt = pred_mask * gt_mask + (1 - pred_mask) * (1 - gt_mask)
+    focal_weight = alpha * (1 - pt) ** gamma
+
+    # Combine losses
+    focal_loss = focal_weight * bce_loss
+
+    return focal_loss.sum() / num_masks  # Normalize by number of masks
+
 def sigmoid_ce_loss(
     inputs: torch.Tensor,
     targets: torch.Tensor,
@@ -95,6 +123,8 @@ def sigmoid_ce_loss(
     """
     loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
     loss = loss.flatten(1, 2).mean(1).sum() / (num_masks + 1e-8)
+
+
     return loss
 
 
@@ -405,6 +435,7 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         mask_bce_loss = 0
         mask_dice_loss = 0
         num_masks = 0
+        mask_focal_loss =0
         for batch_idx in range(len(pred_masks)):
             gt_mask = gt_masks[batch_idx]
             pred_mask = pred_masks[batch_idx]
@@ -422,11 +453,18 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
                 dice_loss(pred_mask, gt_mask, num_masks=gt_mask.shape[0])
                 * gt_mask.shape[0]
             )
+
+            mask_focal_loss += (
+                    focal_loss(pred_mask, gt_mask, num_masks=gt_mask.shape[0])
+                    * gt_mask.shape[0]
+            )
             num_masks += gt_mask.shape[0]
 
         mask_bce_loss = self.bce_loss_weight * mask_bce_loss / (num_masks + 1e-8)
         mask_dice_loss = self.dice_loss_weight * mask_dice_loss / (num_masks + 1e-8)
-        mask_loss = mask_bce_loss + mask_dice_loss
+        mask_focal_loss = 2.0 * mask_focal_loss / (num_masks + 1e-8)  # Normalize focal loss
+
+        mask_loss = mask_bce_loss + mask_dice_loss + mask_focal_loss
 
         # loss += mask_loss
         loss = ce_loss + mask_loss
