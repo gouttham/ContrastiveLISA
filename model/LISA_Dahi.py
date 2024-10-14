@@ -23,10 +23,8 @@ class DisasterAttentionModel(nn.Module):
     def __init__(self, dim, num_heads=8):
         super(DisasterAttentionModel, self).__init__()
 
-        # Multihead attention for cross-attention between pre- and post-disaster feature maps
         self.cross_attention = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, batch_first=True)
 
-        # Deeper projection layer with batch normalization and activations
         self.conv_proj = nn.Sequential(
             nn.Conv2d(dim, dim, kernel_size=3, padding=1),
             nn.BatchNorm2d(dim),
@@ -37,10 +35,9 @@ class DisasterAttentionModel(nn.Module):
             nn.ReLU(inplace=True),
 
             nn.Conv2d(dim, dim, kernel_size=1),
-            nn.Tanh()  # Final activation to scale output between -1 and 1
+            nn.Tanh()
         )
 
-        # Apply weight initialization, reinitializing if NaN values are detected
         self._initialize_weights_with_nan_check()
 
     def forward(self, x1, x2):
@@ -48,46 +45,27 @@ class DisasterAttentionModel(nn.Module):
         x1_flat = x1.view(B, C, H * W).permute(0, 2, 1)  # (B, H*W, C)
         x2_flat = x2.view(B, C, H * W).permute(0, 2, 1)  # (B, H*W, C)
 
-        # Compute cross-attention: Q=x1 (pre-disaster), K=x2 (post-disaster), V=x2 (post-disaster)
         attended_output, _ = self.cross_attention(query=x1_flat, key=x2_flat, value=x2_flat)
 
-        # Reshape back to original: (B, H*W, C) -> (B, C, H, W)
         attended_output = attended_output.permute(0, 2, 1).view(B, C, H, W)
-
-        # Subtract attended features from post-disaster features to highlight differences
         combined_features = x2 - attended_output
-
-        # Apply the deeper convolutional projection to refine the output
         combined_features = self.conv_proj(combined_features)
 
         return combined_features
 
     def _initialize_weights_with_nan_check(self):
-        """
-        Properly initialize weights, checking for NaN values and reinitializing if necessary.
-        """
         for name, param in self.named_parameters():
-            if param.isnan().any():  # Check if there are NaN values
+            if param.isnan().any():
                 print(f"Reinitializing: {name}")
-
                 if 'cross_attention.in_proj_weight' in name or 'cross_attention.out_proj.weight' in name:
-                    # Xavier initialization for multihead attention weights
                     nn.init.xavier_uniform_(param)
-
                 elif 'conv_proj' in name and 'weight' in name:
-                    # He initialization for convolutional layers with ReLU activation
                     nn.init.kaiming_normal_(param, mode='fan_out', nonlinearity='relu')
-
                 elif 'conv_proj' in name and 'bias' in name:
-                    # Initialize biases to zero
                     nn.init.constant_(param, 0)
-
                 elif 'BatchNorm' in name and 'weight' in name:
-                    # Initialize BatchNorm weight to 1
                     nn.init.constant_(param, 1)
-
                 elif 'BatchNorm' in name and 'bias' in name:
-                    # Initialize BatchNorm bias to 0
                     nn.init.constant_(param, 0)
 
 
