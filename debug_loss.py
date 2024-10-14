@@ -134,6 +134,9 @@ def initialize_weights(module):
         if module.bias is not None:
             init.constant_(module.bias, 0)
 
+    elif isinstance(module, nn.Parameter):
+        init.normal_(module, mean=0.0, std=0.01)
+
     # Additional checks for other module types
     if isinstance(module, nn.Module):
         for name, param in module.named_parameters(recurse=False):
@@ -147,8 +150,7 @@ def initialize_weights(module):
                     init.xavier_normal_(param)
                 elif isinstance(module, nn.Conv2d):
                     init.kaiming_normal_(param, mode='fan_out', nonlinearity='relu')
-                elif isinstance(module, nn.Parameter):
-                    init.normal_(param, mean=0.0, std=0.01)
+
 
 
 
