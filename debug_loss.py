@@ -152,12 +152,9 @@ def initialize_weights(module):
                     init.kaiming_normal_(param, mode='fan_out', nonlinearity='relu')
 
 
-
-
-
 if args.constrative:
     model.cross_attn.apply(initialize_weights)
-    model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
+    # model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
     model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
 print("****** Loading Pretrained weights ******")
