@@ -148,6 +148,10 @@ def initialize_weights(module):
 if args.constrative:
     model.cross_attn.apply(initialize_weights)
 
+    for name, module in model.cross_attn.named_modules():
+        if torch.isnan(module).any().item():
+            print(name)
+
     # w = model.cross_attn.apply(initialize_weights)
     # model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
     model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
