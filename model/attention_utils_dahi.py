@@ -402,17 +402,17 @@ class cross_attention(torch.nn.Module):
         self.upsamplex2 = nn.ConvTranspose2d(128, 128, kernel_size=2, stride=2, padding=0, bias=False)
         self.upsamplex4 = nn.ConvTranspose2d(128, 128, kernel_size=4, stride=4, padding=0, bias=False)
 
-        self.conv_layer2_0 = nn.Sequential(
-            nn.Conv2d(512, 512, kernel_size=3, padding=3 // 2, stride=1, bias=False),
-            nn.BatchNorm2d(512),
-            nn.ReLU(),
-            nn.Conv2d(512, 128, kernel_size=3, padding=3 // 2, stride=1)
-        )
+        # self.conv_layer2_0 = nn.Sequential(
+        #     nn.Conv2d(512, 512, kernel_size=3, padding=3 // 2, stride=1, bias=False),
+        #     nn.BatchNorm2d(512),
+        #     nn.ReLU(),
+        #     nn.Conv2d(512, 128, kernel_size=3, padding=3 // 2, stride=1)
+        # )
 
         self.channel_scaler = nn.Sequential(
             nn.BatchNorm2d(128),
             nn.ReLU(),
-            nn.Conv2d(128, 256, kernel_size=3, padding=3 // 2, stride=1, bias=False),
+            nn.Conv2d(128, 256, kernel_size=3, padding=3 // 2, stride=1, bias=True),
             # nn.BatchNorm2d(256),
             # nn.ReLU(),
         )
