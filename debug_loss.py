@@ -106,63 +106,12 @@ vision_tower = model.get_model().get_vision_tower()
 vision_tower.to(dtype=torch_dtype, device=args.local_rank)
 
 import torch.nn.init as init
-def initialize_weights(module):
-    if isinstance(module, nn.Conv2d):
-        # Kaiming initialization for Conv layers
-        init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
-        if module.bias is not None:
-            init.constant_(module.bias, 0)
-
-    elif isinstance(module, nn.Linear):
-        # Xavier initialization for Linear layers
-        init.xavier_normal_(module.weight)
-        if module.bias is not None:
-            init.constant_(module.bias, 0)
-
-    elif isinstance(module, nn.BatchNorm2d) or isinstance(module, nn.BatchNorm1d):
-        # Initialize BatchNorm layers
-        init.constant_(module.weight, 1)
-        init.constant_(module.bias, 0)
-
-    elif isinstance(module, nn.Embedding):
-        # Initialize Embedding layers
-        init.normal_(module.weight, mean=0, std=0.01)
-
-    elif isinstance(module, nn.ConvTranspose2d):
-        # Kaiming initialization for ConvTranspose layers
-        init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
-        if module.bias is not None:
-            init.constant_(module.bias, 0)
-
-    elif isinstance(module, nn.Parameter):
-        init.normal_(module, mean=0.0, std=0.01)
-
-    # Additional checks for other module types
-    if isinstance(module, nn.Module):
-        for name, param in module.named_parameters(recurse=False):
-            # Check if the parameter is 1D or not
-            if param.dim() < 2:
-                # If it's a bias or similar, initialize with constant
-                init.constant_(param, 0)
-            else:
-                # Apply appropriate initialization for weights
-                if isinstance(module, nn.Linear):
-                    init.xavier_normal_(param)
-                elif isinstance(module, nn.Conv2d):
-                    init.kaiming_normal_(param, mode='fan_out', nonlinearity='relu')
 
 
 if args.constrative:
-    for n,w in model.named_parameters():
-        if torch.isnan(w).any():
-            print(n)
-    model.cross_attn.apply(initialize_weights)
 
-    for n,w in model.named_parameters():
-        if torch.isnan(w).any():
-            print(n)
-    0/0
     # model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
+    model.cross_attn.load_state_dict(torch.load('./mbin/DisasterAttentionModel.pth'), strict=True)
     model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
 print("****** Loading Pretrained weights ******")
