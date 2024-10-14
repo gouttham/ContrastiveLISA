@@ -99,7 +99,8 @@ def sigmoid_ce_loss(
     gamma = 2.0
     pt = torch.exp(-loss)  # Probability of true class
     F_loss = alpha * (1 - pt) ** gamma * loss
-    return F_loss.mean()  # or use 'sum' based on your requirement
+    F_loss = F_loss.flatten(1, 2).mean(1).sum() / (num_masks + 1e-8)
+    return F_loss  # or use 'sum' based on your requirement
 
 class LisaMetaModel:
     def __init__(
