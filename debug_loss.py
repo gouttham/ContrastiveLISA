@@ -105,8 +105,35 @@ model.get_model().initialize_vision_modules(model.get_model().config)
 vision_tower = model.get_model().get_vision_tower()
 vision_tower.to(dtype=torch_dtype, device=args.local_rank)
 
+import torch.nn.init as init
+def initialize_weights(module):
+    """
+    Custom weight initialization for different layer types.
+    """
+    if isinstance(module, nn.Conv2d):
+        # Kaiming initialization for Conv layers (good for ReLU activation)
+        init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
+        if module.bias is not None:
+            init.constant_(module.bias, 0)
+
+    elif isinstance(module, nn.Linear):
+        # Xavier initialization for Linear layers
+        init.xavier_normal_(module.weight)
+        if module.bias is not None:
+            init.constant_(module.bias, 0)
+
+    elif isinstance(module, nn.BatchNorm2d) or isinstance(module, nn.BatchNorm1d):
+        # Initialize BatchNorm layers
+        init.constant_(module.weight, 1)
+        init.constant_(module.bias, 0)
+
+    elif isinstance(module, nn.Embedding):
+        # Initialize Embedding layers (optional if applicable)
+        init.normal_(module.weight, mean=0, std=0.01)
+
 if args.constrative:
-    model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
+    model.cross_attn.apply(initialize_weights)
+    # model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
     model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
 print("****** Loading Pretrained weights ******")
