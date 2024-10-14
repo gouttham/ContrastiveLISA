@@ -411,15 +411,15 @@ class cross_attention(torch.nn.Module):
 
         self.channel_scaler = nn.Sequential(
             nn.BatchNorm2d(128),
-            nn.Tanh(),
+            nn.ReLU(),
             nn.Conv2d(128, 256, kernel_size=3, padding=3 // 2, stride=1, bias=False),
             nn.BatchNorm2d(256),
-            nn.Tanh(),
+            nn.ReLU(),
         )
 
         self.final_layer = nn.Sequential(
             nn.BatchNorm2d(512),
-            nn.Tanh(),
+            nn.ReLU(),
             nn.Conv2d(512, 256, kernel_size=3,padding=1),
             nn.BatchNorm2d(256),
         )
