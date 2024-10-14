@@ -240,6 +240,7 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         except:
             print("No Constrative")
             self.constrative = False
+            0/0
 
     def get_visual_embs(self, pixel_values: torch.FloatTensor):
         with torch.no_grad():
