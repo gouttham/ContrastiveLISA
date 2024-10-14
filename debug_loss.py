@@ -149,8 +149,9 @@ if args.constrative:
     model.cross_attn.apply(initialize_weights)
 
     for name, module in model.cross_attn.named_modules():
-        if torch.isnan(module).any().item():
-            print(name)
+        for param_name, param in module.named_parameters(recurse=False):
+            if torch.isnan(param).any().item():
+                print(f"NaN found in parameter '{param_name}' of submodule '{name}'")
 
     # w = model.cross_attn.apply(initialize_weights)
     # model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
