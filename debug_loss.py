@@ -106,12 +106,9 @@ vision_tower = model.get_model().get_vision_tower()
 vision_tower.to(dtype=torch_dtype, device=args.local_rank)
 
 import torch.nn.init as init
-def initialize_weights(module,name=""):
-    """
-    Custom weight initialization for different layer types.
-    """
+def initialize_weights(module):
     if isinstance(module, nn.Conv2d):
-        # Kaiming initialization for Conv layers (good for ReLU activation)
+        # Kaiming initialization for Conv layers
         init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
         if module.bias is not None:
             init.constant_(module.bias, 0)
@@ -128,16 +125,28 @@ def initialize_weights(module,name=""):
         init.constant_(module.bias, 0)
 
     elif isinstance(module, nn.Embedding):
-        # Initialize Embedding layers (optional if applicable)
+        # Initialize Embedding layers
         init.normal_(module.weight, mean=0, std=0.01)
-    else:
-        print(f"Initializing {name}: {module.__class__.__name__}")
+
+    # Additional checks for other module types
+    if isinstance(module, nn.Module):
+        for name, param in module.named_parameters(recurse=False):
+            # Check if the parameter is 1D or not
+            if param.dim() < 2:
+                # If it's a bias or similar, initialize with constant
+                init.constant_(param, 0)
+            else:
+                # Apply appropriate initialization for weights
+                if isinstance(module, nn.Linear):
+                    init.xavier_normal_(param)
+                elif isinstance(module, nn.Conv2d):
+                    init.kaiming_normal_(param, mode='fan_out', nonlinearity='relu')
+
 
 
 
 if args.constrative:
-    for name, param in model.cross_attn.named_parameters():
-        init.xavier_normal_(param)
+    model.cross_attn.apply(initialize_weights)
 
     # w = model.cross_attn.apply(initialize_weights)
     # model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
