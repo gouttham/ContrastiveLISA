@@ -106,7 +106,7 @@ vision_tower = model.get_model().get_vision_tower()
 vision_tower.to(dtype=torch_dtype, device=args.local_rank)
 
 import torch.nn.init as init
-def initialize_weights(module):
+def initialize_weights(module,name=""):
     """
     Custom weight initialization for different layer types.
     """
@@ -130,10 +130,13 @@ def initialize_weights(module):
     elif isinstance(module, nn.Embedding):
         # Initialize Embedding layers (optional if applicable)
         init.normal_(module.weight, mean=0, std=0.01)
+    else:
+        print(f"Initializing {name}: {module.__class__.__name__}")
+
 
 
 if args.constrative:
-    model.cross_attn.apply(initialize_weights)
+    w = model.cross_attn.apply(initialize_weights)
     # model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
     model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
