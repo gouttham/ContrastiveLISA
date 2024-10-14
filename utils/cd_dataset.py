@@ -716,8 +716,8 @@ class Contrastive_CD_Dataset(torch.utils.data.Dataset):
         # to train with all classes
 
 
-
-        unique_label = [0, 1, 2, 3, 4]
+        if self.val:
+            unique_label = [0, 1, 2, 3, 4]
         random.shuffle(unique_label)
 
         # unique_label = [cls for cls in unique_label if cls != 0]  # to remove classes
