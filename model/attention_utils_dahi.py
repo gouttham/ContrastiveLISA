@@ -413,8 +413,8 @@ class cross_attention(torch.nn.Module):
             nn.BatchNorm2d(128),
             nn.ReLU(),
             nn.Conv2d(128, 256, kernel_size=3, padding=3 // 2, stride=1, bias=True),
-            # nn.BatchNorm2d(256),
-            # nn.ReLU(),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
         )
 
         self.final_layer = nn.Sequential(
