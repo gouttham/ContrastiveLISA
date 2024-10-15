@@ -317,13 +317,13 @@ if args.use_scheduler:
     scheduler = get_linear_schedule_with_warmup(
         optimizer,
         num_warmup_steps=100,
-        num_training_steps=total_steps
+        num_training_steps=total_steps*args.epochs
     )
 
     scheduler_cross_attn = get_linear_schedule_with_warmup(
         cross_attn_optimizer,
         num_warmup_steps=100,
-        num_training_steps=total_steps
+        num_training_steps=total_steps*args.epochs
     )
 
 optimizer.zero_grad()
@@ -387,6 +387,7 @@ for epoch in range(args.epochs):
                 "train/mask_dice_loss": mask_dice_losses.avg,
                 "train/mask_loss": mask_losses.avg,
                 "train/lr": optimizer.param_groups[0]['lr'],
+                "train/cross_lr": cross_attn_optimizer.param_groups[0]['lr'],
                 "train/epoch": epoch,
                 "train/train_step" : clock
             })
