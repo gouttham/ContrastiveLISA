@@ -49,13 +49,19 @@ class DisasterAttentionModel2(nn.Module):
         )
 
     def forward(self, x1, x2):
-        B, C, H, W = x1.shape
-        x1_flat = x1.view(B, C, H * W).permute(0, 2, 1)  # (B, H*W, C)
-        x2_flat = x2.view(B, C, H * W).permute(0, 2, 1)  # (B, H*W, C)
+        # Input shape: (B, C, L) where L=4096
+        B, C, L = x1.shape
+
+        # Transpose for multihead attention (B, L, C)
+        x1_flat = x1.permute(0, 2, 1)  # (B, L, C)
+        x2_flat = x2.permute(0, 2, 1)  # (B, L, C)
 
         attended_output, _ = self.cross_attention(query=x1_flat, key=x2_flat, value=x2_flat)
 
-        attended_output = attended_output.permute(0, 2, 1).view(B, C, H, W)
+        # Restore original shape for further processing (B, C, L)
+        attended_output = attended_output.permute(0, 2, 1)
+
+        # Compute the difference and apply 1D convolutional projection
         combined_features = x2 - attended_output
         combined_features = self.conv_proj(combined_features)
 
