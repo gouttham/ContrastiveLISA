@@ -102,6 +102,7 @@ class LlavaMetaForCausalLM(ABC):
         self, input_ids, attention_mask, past_key_values, labels, images
     ):
         vision_tower = self.get_vision_tower()
+        cross_attention = self.get_cross_atten2()
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
             if (
                 past_key_values is not None
@@ -127,7 +128,7 @@ class LlavaMetaForCausalLM(ABC):
             mid_ptr = int(self.encode_images(images).shape[0] / 2)
             pre_feat = image_features[:mid_ptr]
             post_feat = image_features[mid_ptr:]
-            image_features = self.get_cross_atten2(pre_feat)(post_feat)
+            image_features = cross_attention(pre_feat,post_feat)
 
         new_input_embeds = []
         new_labels = [] if labels is not None else None
