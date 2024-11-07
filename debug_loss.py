@@ -116,6 +116,9 @@ if args.constrative:
     model.cross_attn.load_state_dict(torch.load('./mbin/DisasterAttentionModel.pth'), strict=True)
     model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
+    model.cross_attn2.load_state_dict(torch.load('./mbin/DisasterAttentionModel.pth'), strict=True)
+    model.cross_attn2.to(dtype=torch_dtype, device=args.local_rank)
+
 print("****** Loading Pretrained weights ******")
 model.load_state_dict(torch.load("./runs/lisa-7b-xbd-14days/ckpt_model/pytorch_model.bin"),strict=False)
 
