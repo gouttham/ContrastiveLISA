@@ -36,15 +36,15 @@ class DisasterAttentionModel2(nn.Module):
         self.cross_attention = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, batch_first=True)
 
         self.conv_proj = nn.Sequential(
-            nn.Conv2d(dim, dim, kernel_size=3, padding=1),
-            nn.BatchNorm2d(dim),
+            nn.Conv1d(dim, dim, kernel_size=3, padding=1),
+            nn.BatchNorm1d(dim),
             nn.ReLU(inplace=True),
 
-            nn.Conv2d(dim, dim, kernel_size=3, padding=1),
-            nn.BatchNorm2d(dim),
+            nn.Conv1d(dim, dim, kernel_size=3, padding=1),
+            nn.BatchNorm1d(dim),
             nn.ReLU(inplace=True),
 
-            nn.Conv2d(dim, dim, kernel_size=1),
+            nn.Conv1d(dim, dim, kernel_size=1),
             nn.Tanh()
         )
 
