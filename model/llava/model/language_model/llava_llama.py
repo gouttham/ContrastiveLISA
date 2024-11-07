@@ -29,6 +29,38 @@ class LlavaConfig(LlamaConfig):
     model_type = "llava"
 
 
+class DisasterAttentionModel2(nn.Module):
+    def __init__(self, dim, num_heads=8):
+        super(DisasterAttentionModel2, self).__init__()
+
+        self.cross_attention = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, batch_first=True)
+
+        self.conv_proj = nn.Sequential(
+            nn.Conv2d(dim, dim, kernel_size=3, padding=1),
+            nn.BatchNorm2d(dim),
+            nn.ReLU(inplace=True),
+
+            nn.Conv2d(dim, dim, kernel_size=3, padding=1),
+            nn.BatchNorm2d(dim),
+            nn.ReLU(inplace=True),
+
+            nn.Conv2d(dim, dim, kernel_size=1),
+            nn.Tanh()
+        )
+
+    def forward(self, x1, x2):
+        B, C, H, W = x1.shape
+        x1_flat = x1.view(B, C, H * W).permute(0, 2, 1)  # (B, H*W, C)
+        x2_flat = x2.view(B, C, H * W).permute(0, 2, 1)  # (B, H*W, C)
+
+        attended_output, _ = self.cross_attention(query=x1_flat, key=x2_flat, value=x2_flat)
+
+        attended_output = attended_output.permute(0, 2, 1).view(B, C, H, W)
+        combined_features = x2 - attended_output
+        combined_features = self.conv_proj(combined_features)
+
+        return combined_features
+
 class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
     config_class = LlavaConfig
 
@@ -48,6 +80,10 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
 
         # Initialize weights and apply final processing
         self.post_init()
+        self.cross_attn2 = DisasterAttentionModel2(dim=256, num_heads=8)
+
+    def get_cross_atten2(self):
+        return self.cross_attn2
 
     def get_model(self):
         return self.model

@@ -87,6 +87,9 @@ class LlavaMetaForCausalLM(ABC):
     def get_model(self):
         pass
 
+    def get_cross_atten2(self):
+        pass
+
     def get_vision_tower(self):
         return self.get_model().get_vision_tower()
 
@@ -121,6 +124,10 @@ class LlavaMetaForCausalLM(ABC):
             image_features = [x.flatten(0, 1) for x in image_features]
         else:
             image_features = self.encode_images(images)
+            mid_ptr = int(self.encode_images(images).shape[0] / 2)
+            pre_feat = image_features[:mid_ptr]
+            post_feat = image_features[mid_ptr:]
+            image_features = self.get_cross_atten2(pre_feat)(post_feat)
 
         new_input_embeds = []
         new_labels = [] if labels is not None else None
