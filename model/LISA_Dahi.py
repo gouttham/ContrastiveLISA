@@ -259,6 +259,7 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         if self.constrative:
             
             # print('const')
+            images_clip_pre = images_clip[:, 0, :]
             images_clip = images_clip[:, 1, :]
             images1 = images[:, 0, :]
             images2 = images[:, 1, :]
