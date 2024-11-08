@@ -297,7 +297,6 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
             # print('``````````````````````````````````````````````````````````````````')
             # print("images_clip : ",images_clip.shape)
             # print('``````````````````````````````````````````````````````````````````')
-            print("other side")
             assert images_clip.shape[0] == 1
 
             images_clip_pre_extend = images_clip_pre.expand(length, -1, -1, -1).contiguous()
