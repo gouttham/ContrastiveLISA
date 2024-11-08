@@ -299,13 +299,17 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
             # print('``````````````````````````````````````````````````````````````````')
             print("other side")
             assert images_clip.shape[0] == 1
+
+            images_clip_pre_extend = images_clip_pre.expand(length, -1, -1, -1).contiguous()
             images_clip_extend = images_clip.expand(length, -1, -1, -1).contiguous()
 
             output_hidden_states = []
             for i in range(n_batch):
                 start_i, end_i = i * length, min((i + 1) * length, input_ids.shape[0])
+
+                input_clip_images = torch.cat([images_clip_pre_extend[: end_i - start_i],images_clip_extend[: end_i - start_i]],0)
                 output_i = super().forward(
-                    images=images_clip_extend[: end_i - start_i],
+                    images=input_clip_images,
                     attention_mask=attention_masks[start_i:end_i],
                     input_ids=input_ids[start_i:end_i],
                     output_hidden_states=True,
