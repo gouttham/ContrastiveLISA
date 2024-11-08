@@ -416,6 +416,7 @@ for epoch in range(args.epochs):
                 "train/mask_loss": mask_losses.avg,
                 "train/lr": optimizer.param_groups[0]['lr'],
                 "train/cross_lr": cross_attn_optimizer.param_groups[0]['lr'],
+                "train/cross2_lr": cross_attn2_optimizer.param_groups[0]['lr'],
                 "train/epoch": epoch,
                 "train/train_step" : clock
             })
