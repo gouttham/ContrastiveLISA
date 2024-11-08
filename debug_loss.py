@@ -342,6 +342,14 @@ if args.use_scheduler:
         num_training_steps=total_steps*args.epochs
     )
 
+    scheduler_cross_attn2 = get_linear_schedule_with_warmup(
+        cross_attn2_optimizer,
+        num_warmup_steps=100,
+        num_training_steps=total_steps * args.epochs
+    )
+
+
+
 optimizer.zero_grad()
 cross_attn_optimizer.zero_grad()
 best_iou = 0
@@ -390,6 +398,7 @@ for epoch in range(args.epochs):
         if args.use_scheduler:
             scheduler.step()
             scheduler_cross_attn.step()
+            scheduler_cross_attn2.step()
 
         losses.update(loss.item(), input_dict["images"].size(0))
         ce_losses.update(output_dict["ce_loss"].item(), input_dict["images"].size(0))
@@ -397,7 +406,7 @@ for epoch in range(args.epochs):
         mask_dice_losses.update(output_dict["mask_dice_loss"].item(), input_dict["images"].size(0))
         mask_losses.update(output_dict["mask_loss"].item(), input_dict["images"].size(0))
 
-        if train_idx % 100 ==0:
+        if train_idx>0 and train_idx % 100 ==0:
             print("epoch : ",epoch," iter : ",train_idx," loss : ",losses.avg)
             wandb.log({
                 "train/loss":losses.avg,
