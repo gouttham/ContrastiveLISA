@@ -88,7 +88,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         self.post_init()
         self.cross_attn2 = DisasterAttentionModel2(dim=256, num_heads=8)
 
-    def get_cross_atten2(self):
+    def get_cross_attn2(self):
         return self.cross_attn2
 
     def get_model(self):
