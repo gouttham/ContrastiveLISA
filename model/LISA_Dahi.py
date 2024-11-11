@@ -46,7 +46,7 @@ class DisasterAttentionModel(nn.Module):
         attended_output, _ = self.cross_attention(query=x1_flat, key=x2_flat, value=x2_flat)
 
         attended_output = attended_output.permute(0, 2, 1).view(B, C, H, W)
-        combined_features = x2 - attended_output
+        combined_features = x2 + (x2 - attended_output)
         combined_features = self.conv_proj(combined_features)
 
         return combined_features
@@ -265,9 +265,10 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
             images2 = images[:, 1, :]
 
             # images = images[:, 0, :]
-            image_embeddings1 = self.get_visual_embs(images1)
-            image_embeddings2 = self.get_visual_embs(images2)
-            image_embeddings = self.cross_attn(image_embeddings1, image_embeddings2)
+            # image_embeddings1 = self.get_visual_embs(images1)
+            # image_embeddings2 = self.get_visual_embs(images2)
+            # image_embeddings = self.cross_attn(image_embeddings1, image_embeddings2)
+            image_embeddings = torch.ones((2,224,64,64))
         
         # print(torch.max(images).item(), torch.min(images).item())
         # print(torch.max(images_clip).item(),torch.min(images_clip).item())
@@ -281,13 +282,13 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         seg_token_mask = torch.cat(
             [
                 seg_token_mask,
-                torch.zeros((seg_token_mask.shape[0], 1)).bool().cuda(),
+                torch.zeros((seg_token_mask.shape[0], 1)).bool(),
             ],
             dim=1,
         )
         # hack for IMAGE_TOKEN_INDEX (we suppose that there is only one image, and it is in the front)
         seg_token_mask = torch.cat(
-            [torch.zeros((seg_token_mask.shape[0], 255)).bool().cuda(), seg_token_mask],
+            [torch.zeros((seg_token_mask.shape[0], 255)).bool(), seg_token_mask],
             dim=1,
         )
 

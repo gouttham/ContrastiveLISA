@@ -62,7 +62,7 @@ class DisasterAttentionModel2(nn.Module):
         attended_output = attended_output.permute(0, 2, 1)
 
         # Compute the difference and apply 1D convolutional projection
-        combined_features = x2 - attended_output
+        combined_features = x2 + (x2 - attended_output)
         combined_features = self.conv_proj(combined_features)
 
         return combined_features
