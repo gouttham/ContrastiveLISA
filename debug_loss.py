@@ -46,7 +46,7 @@ args.use_scheduler = False
 args.lr = 0.0001
 args.lr2 = 0.001
 args.epochs = 300
-args.ce_loss_weight = 0.0
+# args.ce_loss_weight = 0.0
 args.use_scheduler = True
 
 args.num_classes_per_sample = 3
