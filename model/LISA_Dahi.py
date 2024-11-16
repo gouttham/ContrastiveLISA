@@ -288,7 +288,7 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         )
         # hack for IMAGE_TOKEN_INDEX (we suppose that there is only one image, and it is in the front)
         seg_token_mask = torch.cat(
-            [torch.zeros((seg_token_mask.shape[0], 255*2)).bool().cuda(), seg_token_mask],
+            [torch.zeros((seg_token_mask.shape[0], 255*2+1)).bool().cuda(), seg_token_mask],
             dim=1,
         )
 
