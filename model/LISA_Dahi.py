@@ -327,8 +327,9 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
             # print('``````````````````````````````````````````````````````````````````')
             # print("Else part")
             # print('``````````````````````````````````````````````````````````````````')
-            images_clip_list = []
 
+            images_clip_list = []
+            PRE_LIST = []
             for i in range(len(offset) - 1):
                 start_i, end_i = offset[i], offset[i + 1]
                 images_clip_pre_i = (
@@ -337,8 +338,10 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
                     .expand(end_i - start_i, -1, -1, -1)
                     .contiguous()
                 )
-                images_clip_list.append(images_clip_pre_i)
+                PRE_LIST.append(images_clip_pre_i)
+            PRE_LIST = torch.cat(PRE_LIST, dim=0)
 
+            POST_LIST = []
             for i in range(len(offset) - 1):
                 start_i, end_i = offset[i], offset[i + 1]
                 images_clip_i = (
@@ -347,8 +350,9 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
                     .expand(end_i - start_i, -1, -1, -1)
                     .contiguous()
                 )
-                images_clip_list.append(images_clip_i)
-            images_clip = torch.cat(images_clip_list, dim=0)
+                POST_LIST.append(images_clip_i)
+            POST_LIST = torch.cat(POST_LIST, dim=0)
+            images_clip = [PRE_LIST,POST_LIST]
 
             output = super().forward(
                 images=images_clip,

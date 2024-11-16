@@ -93,19 +93,24 @@ class LlavaMetaForCausalLM(ABC):
     def get_vision_tower(self):
         return self.get_model().get_vision_tower()
 
+    # def encode_images(self, images):
+    #     image_features = self.get_model().get_vision_tower()(images)
+    #     mid_ptr = int(image_features.shape[0] / 2)
+    #     pre_feat = image_features[:mid_ptr]
+    #     post_feat = image_features[mid_ptr:]
+    #     pre_image_features = self.get_model().mm_projector(pre_feat)
+    #     post_image_features = self.get_model().mm_projector(post_feat)
+    #     # print("pre_image_features : ",pre_image_features.shape)
+    #     # print("post_image_features : ", post_image_features.shape)
+    #     image_features = torch.cat([pre_image_features,post_image_features],dim=-2)
+    #     # print("image_features : ", image_features.shape)
+    #     # image_features = self.get_cross_attn2()(pre_feat, post_feat)
+    #     # image_features = self.get_model().mm_projector(image_features)
+    #     return image_features
+
     def encode_images(self, images):
         image_features = self.get_model().get_vision_tower()(images)
-        mid_ptr = int(image_features.shape[0] / 2)
-        pre_feat = image_features[:mid_ptr]
-        post_feat = image_features[mid_ptr:]
-        pre_image_features = self.get_model().mm_projector(pre_feat)
-        post_image_features = self.get_model().mm_projector(post_feat)
-        # print("pre_image_features : ",pre_image_features.shape)
-        # print("post_image_features : ", post_image_features.shape)
-        image_features = torch.cat([pre_image_features,post_image_features],dim=-2)
-        # print("image_features : ", image_features.shape)
-        # image_features = self.get_cross_attn2()(pre_feat, post_feat)
-        # image_features = self.get_model().mm_projector(image_features)
+        image_features = self.get_model().mm_projector(image_features)
         return image_features
 
     def prepare_inputs_labels_for_multimodal(
