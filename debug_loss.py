@@ -116,8 +116,8 @@ if args.constrative:
     model.cross_attn.load_state_dict(torch.load('./mbin/DisasterAttentionModel.pth'), strict=True)
     model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
-    model.cross_attn2.load_state_dict(torch.load('./mbin/DisasterAttentionModel2.pth'), strict=True)
-    model.cross_attn2.to(dtype=torch_dtype, device=args.local_rank)
+    # model.cross_attn2.load_state_dict(torch.load('./mbin/DisasterAttentionModel2.pth'), strict=True)
+    # model.cross_attn2.to(dtype=torch_dtype, device=args.local_rank)
 
 print("****** Loading Pretrained weights ******")
 model.load_state_dict(torch.load("./runs/lisa-7b-xbd-14days/ckpt_model/pytorch_model.bin"),strict=False)
@@ -176,9 +176,9 @@ model.cross_attn.train()
 for param in model.cross_attn.parameters():
     param.requires_grad = True
 
-model.cross_attn2.train()
-for param in model.cross_attn2.parameters():
-    param.requires_grad = True
+# model.cross_attn2.train()
+# for param in model.cross_attn2.parameters():
+#     param.requires_grad = True
 
 
 
@@ -274,12 +274,12 @@ cross_attn_optimizer = optim.AdamW(
 )
 
 # Separate optimizer for cross-attn parameters
-cross_attn2_optimizer = optim.AdamW(
-    model.cross_attn2.parameters(),
-    lr=args.lr2,  # You can use a different learning rate for cross-attn if desired
-    betas=(args.beta1, args.beta2),
-    weight_decay=0.0
-)
+# cross_attn2_optimizer = optim.AdamW(
+#     model.cross_attn2.parameters(),
+#     lr=args.lr2,  # You can use a different learning rate for cross-attn if desired
+#     betas=(args.beta1, args.beta2),
+#     weight_decay=0.0
+# )
 
 # optimizer = optim.AdamW(
 #     model.parameters(),
@@ -342,11 +342,11 @@ if args.use_scheduler:
         num_training_steps=total_steps*args.epochs
     )
 
-    scheduler_cross_attn2 = get_linear_schedule_with_warmup(
-        cross_attn2_optimizer,
-        num_warmup_steps=100,
-        num_training_steps=total_steps * args.epochs
-    )
+    # scheduler_cross_attn2 = get_linear_schedule_with_warmup(
+    #     cross_attn2_optimizer,
+    #     num_warmup_steps=100,
+    #     num_training_steps=total_steps * args.epochs
+    # )
 
 
 
@@ -387,18 +387,18 @@ for epoch in range(args.epochs):
 
         optimizer.step()
         cross_attn_optimizer.step()
-        cross_attn2_optimizer.step()
+        # cross_attn2_optimizer.step()
 
 
         optimizer.zero_grad()
         cross_attn_optimizer.zero_grad()
-        cross_attn2_optimizer.zero_grad()
+        # cross_attn2_optimizer.zero_grad()
 
 
         if args.use_scheduler:
             scheduler.step()
             scheduler_cross_attn.step()
-            scheduler_cross_attn2.step()
+            # scheduler_cross_attn2.step()
 
         losses.update(loss.item(), input_dict["images"].size(0))
         ce_losses.update(output_dict["ce_loss"].item(), input_dict["images"].size(0))
@@ -416,7 +416,7 @@ for epoch in range(args.epochs):
                 "train/mask_loss": mask_losses.avg,
                 "train/lr": optimizer.param_groups[0]['lr'],
                 "train/cross_lr": cross_attn_optimizer.param_groups[0]['lr'],
-                "train/cross2_lr": cross_attn2_optimizer.param_groups[0]['lr'],
+                # "train/cross2_lr": cross_attn2_optimizer.param_groups[0]['lr'],
                 "train/epoch": epoch,
                 "train/train_step" : clock
             })

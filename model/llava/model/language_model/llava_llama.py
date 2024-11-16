@@ -29,43 +29,43 @@ class LlavaConfig(LlamaConfig):
     model_type = "llava"
 
 
-class DisasterAttentionModel2(nn.Module):
-    def __init__(self, dim, num_heads=8):
-        super(DisasterAttentionModel2, self).__init__()
-
-        self.cross_attention = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, batch_first=True)
-
-        self.conv_proj = nn.Sequential(
-            nn.Conv1d(dim, dim, kernel_size=3, padding=1),
-            nn.BatchNorm1d(dim),
-            nn.ReLU(inplace=True),
-
-            nn.Conv1d(dim, dim, kernel_size=3, padding=1),
-            nn.BatchNorm1d(dim),
-            nn.ReLU(inplace=True),
-
-            nn.Conv1d(dim, dim, kernel_size=1),
-            nn.Tanh()
-        )
-
-    def forward(self, x1, x2):
-        # Input shape: (B, C, L) where L=4096
-        B, C, L = x1.shape
-
-        # Transpose for multihead attention (B, L, C)
-        x1_flat = x1.permute(0, 2, 1)  # (B, L, C)
-        x2_flat = x2.permute(0, 2, 1)  # (B, L, C)
-
-        attended_output, _ = self.cross_attention(query=x1_flat, key=x2_flat, value=x2_flat)
-
-        # Restore original shape for further processing (B, C, L)
-        attended_output = attended_output.permute(0, 2, 1)
-
-        # Compute the difference and apply 1D convolutional projection
-        combined_features = x2 + (x2 - attended_output)
-        combined_features = self.conv_proj(combined_features)
-
-        return combined_features
+# class DisasterAttentionModel2(nn.Module):
+#     def __init__(self, dim, num_heads=8):
+#         super(DisasterAttentionModel2, self).__init__()
+#
+#         self.cross_attention = nn.MultiheadAttention(embed_dim=dim, num_heads=num_heads, batch_first=True)
+#
+#         self.conv_proj = nn.Sequential(
+#             nn.Conv1d(dim, dim, kernel_size=3, padding=1),
+#             nn.BatchNorm1d(dim),
+#             nn.ReLU(inplace=True),
+#
+#             nn.Conv1d(dim, dim, kernel_size=3, padding=1),
+#             nn.BatchNorm1d(dim),
+#             nn.ReLU(inplace=True),
+#
+#             nn.Conv1d(dim, dim, kernel_size=1),
+#             nn.Tanh()
+#         )
+#
+#     def forward(self, x1, x2):
+#         # Input shape: (B, C, L) where L=4096
+#         B, C, L = x1.shape
+#
+#         # Transpose for multihead attention (B, L, C)
+#         x1_flat = x1.permute(0, 2, 1)  # (B, L, C)
+#         x2_flat = x2.permute(0, 2, 1)  # (B, L, C)
+#
+#         attended_output, _ = self.cross_attention(query=x1_flat, key=x2_flat, value=x2_flat)
+#
+#         # Restore original shape for further processing (B, C, L)
+#         attended_output = attended_output.permute(0, 2, 1)
+#
+#         # Compute the difference and apply 1D convolutional projection
+#         combined_features = x2 + (x2 - attended_output)
+#         combined_features = self.conv_proj(combined_features)
+#
+#         return combined_features
 
 class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
     config_class = LlavaConfig
@@ -86,10 +86,10 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
 
         # Initialize weights and apply final processing
         self.post_init()
-        self.cross_attn2 = DisasterAttentionModel2(dim=256, num_heads=8)
+        # self.cross_attn2 = DisasterAttentionModel2(dim=256, num_heads=8)
 
-    def get_cross_attn2(self):
-        return self.cross_attn2
+    # def get_cross_attn2(self):
+    #     return self.cross_attn2
 
     def get_model(self):
         return self.model
