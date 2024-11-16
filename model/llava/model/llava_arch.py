@@ -100,10 +100,10 @@ class LlavaMetaForCausalLM(ABC):
         post_feat = image_features[mid_ptr:]
         pre_image_features = self.get_model().mm_projector(pre_feat)
         post_image_features = self.get_model().mm_projector(post_feat)
-        print("pre_image_features : ",pre_image_features.shape)
-        print("post_image_features : ", post_image_features.shape)
+        # print("pre_image_features : ",pre_image_features.shape)
+        # print("post_image_features : ", post_image_features.shape)
         image_features = torch.cat([pre_image_features,post_image_features],dim=-2)
-        print("image_features : ", image_features.shape)
+        # print("image_features : ", image_features.shape)
         # image_features = self.get_cross_attn2()(pre_feat, post_feat)
         # image_features = self.get_model().mm_projector(image_features)
         return image_features
