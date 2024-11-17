@@ -321,10 +321,15 @@ device = torch.device("cuda:0")
 model = model.to(dtype=torch_dtype)
 model = model.to(device)
 
-clss = [
-    "no building","undamaged building", "building with minor damage",
-    "building with major damage", "completely destroyed building"
-]
+if args.const_seg_data == 'xbd':
+    clss = [
+        "no building","undamaged building", "building with minor damage",
+        "building with major damage", "completely destroyed building"
+    ]
+if args.const_seg_data == 's2looking':
+    clss = [
+        "region with no change in buildings", "new buildings", "destroyed buildings"
+    ]
 
 
 if args.use_scheduler:
