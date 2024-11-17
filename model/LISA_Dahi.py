@@ -306,7 +306,8 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
             for i in range(n_batch):
                 start_i, end_i = i * length, min((i + 1) * length, input_ids.shape[0])
 
-                input_clip_images = torch.cat([images_clip_pre_extend[: end_i - start_i],images_clip_extend[: end_i - start_i]],0)
+                # input_clip_images = torch.cat([images_clip_pre_extend[: end_i - start_i],images_clip_extend[: end_i - start_i]],0)
+                input_clip_images = [images_clip_pre_extend[: end_i - start_i], images_clip_extend[: end_i - start_i]]
                 output_i = super().forward(
                     images=input_clip_images,
                     attention_mask=attention_masks[start_i:end_i],
