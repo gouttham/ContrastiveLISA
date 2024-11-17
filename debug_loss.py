@@ -110,11 +110,11 @@ vision_tower.to(dtype=torch_dtype, device=args.local_rank)
 import torch.nn.init as init
 
 
-if args.constrative:
+# if args.constrative:
 
     # model.cross_attn.load_state_dict(torch.load('./mbin/cross_attn_dahi.pt'), strict=False)
-    model.cross_attn.load_state_dict(torch.load('./mbin/DisasterAttentionModel.pth'), strict=True)
-    model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
+    # model.cross_attn.load_state_dict(torch.load('./mbin/DisasterAttentionModel.pth'), strict=True)
+    # model.cross_attn.to(dtype=torch_dtype, device=args.local_rank)
 
     # model.cross_attn2.load_state_dict(torch.load('./mbin/DisasterAttentionModel2.pth'), strict=True)
     # model.cross_attn2.to(dtype=torch_dtype, device=args.local_rank)
