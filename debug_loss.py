@@ -172,9 +172,9 @@ for n, p in model.named_parameters():
         print("n: ", n, "p.shape: ", p.shape)
         p.requires_grad = True
 
-model.cross_attn.train()
-for param in model.cross_attn.parameters():
-    param.requires_grad = True
+# model.cross_attn.train()
+# for param in model.cross_attn.parameters():
+#     param.requires_grad = True
 
 # model.cross_attn2.train()
 # for param in model.cross_attn2.parameters():

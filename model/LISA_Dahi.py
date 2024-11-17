@@ -197,15 +197,15 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         # except:
         #     print("*********************** NO Constrative ***********************")
 
-        try:
-            self.constrative = kwargs.pop("constrative")
-            # self.cross_attn = cross_attention()
-            self.cross_attn = DisasterAttentionModel(dim=256, num_heads=8)
-            
-        except:
-            print("No Constrative")
-            self.constrative = False
-            0/0
+        # try:
+        #     self.constrative = kwargs.pop("constrative")
+        #     # self.cross_attn = cross_attention()
+        #     self.cross_attn = DisasterAttentionModel(dim=256, num_heads=8)
+        #
+        # except:
+        #     print("No Constrative")
+        #     self.constrative = False
+        #     0/0
 
     def get_visual_embs(self, pixel_values: torch.FloatTensor):
         with torch.no_grad():
@@ -263,7 +263,7 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
             images_clip = images_clip[:, 1, :]
 
             # images = images[:, 0, :]
-            image_embeddings_pre = self.get_visual_embs(images[:, 0, :])
+            # image_embeddings_pre = self.get_visual_embs(images[:, 0, :])
             image_embeddings_post = self.get_visual_embs(images[:, 1, :])
             # image_embeddings = self.cross_attn(image_embeddings_pre, image_embeddings_post)
             image_embeddings = image_embeddings_post
