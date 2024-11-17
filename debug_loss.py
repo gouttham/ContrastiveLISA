@@ -370,8 +370,8 @@ for epoch in range(args.epochs):
 
     for train_idx,input_dict in enumerate(train_loader):
         print(train_idx,end='\r')
-        if train_idx>10:
-            break
+        # if train_idx>10:
+        #     break
         clock +=1
 
 
