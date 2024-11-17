@@ -261,13 +261,12 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
             # print('const')
             images_clip_pre = images_clip[:, 0, :]
             images_clip = images_clip[:, 1, :]
-            images1 = images[:, 0, :]
-            images2 = images[:, 1, :]
 
             # images = images[:, 0, :]
-            image_embeddings1 = self.get_visual_embs(images1)
-            image_embeddings2 = self.get_visual_embs(images2)
-            image_embeddings = self.cross_attn(image_embeddings1, image_embeddings2)
+            image_embeddings_pre = self.get_visual_embs(images[:, 0, :])
+            image_embeddings_post = self.get_visual_embs(images[:, 1, :])
+            # image_embeddings = self.cross_attn(image_embeddings_pre, image_embeddings_post)
+            image_embeddings = image_embeddings_post
             # image_embeddings = torch.ones((2,224,64,64))
         
         # print(torch.max(images).item(), torch.min(images).item())
