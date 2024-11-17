@@ -483,7 +483,7 @@ for epoch in range(args.epochs):
 
             sv_image = sv_image*255.0
             cv2.putText(sv_image, prmpt, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 1)
-            temp_name_i = str(clss.index(prmpt)) + "("+str(iou_score)+")_" + save_name
+            temp_name_i = str(clss.index(prmpt)) + "("+str(iou_score)+"_"+str(epoch)+")_" + save_name
             image_logger[str(clss.index(prmpt))] = wandb.Image(sv_image, caption=f"{temp_name_i}")
             # log_exp_img.append(wandb.Image(sv_image, caption=f"{temp_name_i}"))
 
