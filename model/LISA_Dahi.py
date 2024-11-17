@@ -191,6 +191,7 @@ class LISAForCausalLM(LlavaLlamaForCausalLM):
         # Initialize weights and apply final processing
         self.post_init()
 
+        self.constrative = kwargs.pop("constrative")
         # try:
         #     self.constrative = kwargs.pop("constrative")
         #     self.cross_attn = networks.BASE_Transformer(input_nc=3, output_nc=2, token_len=4, resnet_stages_num=4, with_pos='learned', enc_depth=1, dec_depth=8, decoder_dim_head=8)
