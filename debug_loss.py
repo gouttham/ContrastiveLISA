@@ -336,11 +336,11 @@ if args.use_scheduler:
         num_training_steps=total_steps*args.epochs
     )
 
-    scheduler_cross_attn = get_linear_schedule_with_warmup(
-        cross_attn_optimizer,
-        num_warmup_steps=100,
-        num_training_steps=total_steps*args.epochs
-    )
+    # scheduler_cross_attn = get_linear_schedule_with_warmup(
+    #     cross_attn_optimizer,
+    #     num_warmup_steps=100,
+    #     num_training_steps=total_steps*args.epochs
+    # )
 
     # scheduler_cross_attn2 = get_linear_schedule_with_warmup(
     #     cross_attn2_optimizer,
@@ -351,7 +351,7 @@ if args.use_scheduler:
 
 
 optimizer.zero_grad()
-cross_attn_optimizer.zero_grad()
+# cross_attn_optimizer.zero_grad()
 best_iou = 0
 clock = 0
 for epoch in range(args.epochs):
@@ -386,18 +386,18 @@ for epoch in range(args.epochs):
         # torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
         optimizer.step()
-        cross_attn_optimizer.step()
+        # cross_attn_optimizer.step()
         # cross_attn2_optimizer.step()
 
 
         optimizer.zero_grad()
-        cross_attn_optimizer.zero_grad()
+        # cross_attn_optimizer.zero_grad()
         # cross_attn2_optimizer.zero_grad()
 
 
         if args.use_scheduler:
             scheduler.step()
-            scheduler_cross_attn.step()
+            # scheduler_cross_attn.step()
             # scheduler_cross_attn2.step()
 
         losses.update(loss.item(), input_dict["images"].size(0))
@@ -415,7 +415,7 @@ for epoch in range(args.epochs):
                 "train/mask_dice_loss": mask_dice_losses.avg,
                 "train/mask_loss": mask_losses.avg,
                 "train/lr": optimizer.param_groups[0]['lr'],
-                "train/cross_lr": cross_attn_optimizer.param_groups[0]['lr'],
+                # "train/cross_lr": cross_attn_optimizer.param_groups[0]['lr'],
                 # "train/cross2_lr": cross_attn2_optimizer.param_groups[0]['lr'],
                 "train/epoch": epoch,
                 "train/train_step" : clock
